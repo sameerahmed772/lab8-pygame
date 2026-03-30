@@ -33,5 +33,17 @@
 
 ### **New Interaction**
 - **Hook Version**: 1.02
-- **Date**: 30-03-2026 10:58
+- **Date**: 30-03-2026 11:07
 - **Prompt**: i have added new changes according to your suggestion, can you add some tests (pytest?) to check
+
+### **New Interaction**
+- **CoPilot Model**: Claude Haiku 4.5
+- **Date**: 30-03-2026 11:12
+- **Prompt**: i have added new changes according to your suggestion, can you add some tests (pytest?) to check
+- **Changes Made**: Created comprehensive pytest test suite (`test_main.py`) with 29 tests covering: square creation, physics (bouncing, friction, collisions), event handling (pause, difficulty, clicking, adding squares). Added pytest to requirements.txt.
+- **Context and Reasons for Changes**: Tests validate core game logic without requiring display initialization using mocks. All tests pass, ensuring physics, event handling, and game state management work correctly. Test structure supports future feature additions.
+
+### **New Interaction**
+- **Hook Version**: 1.02
+- **Date**: 30-03-2026 11:01
+- **Prompt**: can you help me make the code cleaner and update readme?
