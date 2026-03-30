@@ -8,3 +8,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 30-03-2026 10:16
 - **Prompt**: read #file:copilot-instructions.md and #file:journal-logger.agent.md
 
+### 30-03-2026 10:17
+- **Prompt**: help me implement this with stubs and todos
+
