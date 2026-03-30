@@ -1,8 +1,9 @@
 # Lab 8: Random Moving Squares
 
-A simple Python game built with Pygame featuring physics-based movement, collisions, and interactive gameplay. Practice core game development patterns: event handling, game state management, physics simulation, and rendering.
+A simple Python game built with Pygame featuring physics-based movement, collisions, and interactive gameplay. The latest version adds size-dependent movement, where smaller squares move faster and larger squares move slower.
 
 ## Features
+- **Size-Dependent Speed:** Each square has a random size and a max speed computed from its size
 - **Physics Engine:** Realistic bouncing, friction, acceleration, and collision detection
 - **Interactive Gameplay:** Click squares to destroy them and earn points
 - **Difficulty Levels:** Adjust game speed with keyboard controls
@@ -75,6 +76,17 @@ The project follows the standard **Pygame Game Loop** pattern:
 - **Acceleration:** Random drift (-0.1 to +0.1) per frame
 - **Collision:** Simple elastic collision via velocity swapping
 - **Wall Bouncing:** Velocity reversal at screen boundaries
+
+## Size-Speed Model
+
+Squares now use an inverse size-to-speed relationship:
+
+- Square size range: 15 to 80 pixels
+- Max speed formula: `max_speed = SPEED_BASE_CONSTANT / size`
+- Current base constant: `SPEED_BASE_CONSTANT = 100.0`
+- Initial speed is randomized in `[0.5 * max_speed, max_speed]`
+
+This means smaller squares are naturally faster, while larger squares move more slowly.
 
 ## Testing
 
