@@ -71,3 +71,23 @@
 - **Hook Version**: 1.02
 - **Date**: 07-04-2026 14:18
 - **Prompt**: how to implement fleeing, make small squares flee away from the bigger ones.   All square tend to keep certain randomness to their behavior/trajectory  Suggest me what to do, do not channge my code and make sure to read #file:copilot-instructions.md and #file:journal-logger.agent.md
+### **New Interaction**
+- **Agent Version**: 2.2
+- **Date**: 07-04-2026 14:20
+- **User**: redowan-ahmed.sameer@epita.fr
+- **Prompt**: how to implement fleeing, make small squares flee away from the bigger ones. 
+
+All square tend to keep certain randomness to their behavior/trajectory
+
+Suggest me what to do, do not channge my code and make sure to read #file:copilot-instructions.md and #file:journal-logger.agent.md
+- **CoPilot Mode**: Ask
+- **CoPilot Model**: GPT-5.4 mini
+- **Socratic Mode**: ON
+- **Changes Made**: No code changes; appended journal entry per repo instructions.
+- **Context and Reasons for Changes**: Logged the request and noted that the user asked for guidance only, so I will provide implementation advice without modifying source files.
+
+
+### **New Interaction**
+- **Hook Version**: 1.02
+- **Date**: 07-04-2026 14:23
+- **Prompt**: i have tried to update the square function, can u tell me if it correct or sugggest changes?
