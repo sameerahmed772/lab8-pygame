@@ -38,3 +38,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 07-04-2026 14:53
 - **Prompt**: can u check my code and tell me why the collision is still there and also give a review of my code?
 
+### 07-04-2026 14:58
+- **Prompt**: can u help me update the readme? and make sure the journal is updated properly incase anything is missed
+

@@ -139,3 +139,19 @@ Suggest me what to do, do not channge my code and make sure to read #file:copilo
 - **Hook Version**: 1.02
 - **Date**: 07-04-2026 14:53
 - **Prompt**: can u check my code and tell me why the collision is still there and also give a review of my code?
+### **New Interaction**
+- **Agent Version**: 2.2
+- **Date**: 07-04-2026 14:54
+- **User**: redowan-ahmed.sameer@epita.fr
+- **Prompt**: can u check my code and tell me why the collision is still there and also give a review of my code?
+- **CoPilot Mode**: Ask
+- **CoPilot Model**: GPT-5.4 mini
+- **Socratic Mode**: ON
+- **Changes Made**: No code changes; performed collision/debug-focused review and identified likely causes.
+- **Context and Reasons for Changes**: User requested diagnosis and review only, so I inspected logic and prepared actionable findings without modifying files.
+
+
+### **New Interaction**
+- **Hook Version**: 1.02
+- **Date**: 07-04-2026 14:58
+- **Prompt**: can u help me update the readme? and make sure the journal is updated properly incase anything is missed
