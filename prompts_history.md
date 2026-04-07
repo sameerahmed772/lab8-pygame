@@ -41,3 +41,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 07-04-2026 14:58
 - **Prompt**: can u help me update the readme? and make sure the journal is updated properly incase anything is missed
 
+### 07-04-2026 14:59
+- **Prompt**: update repo to github
+

@@ -155,3 +155,30 @@ Suggest me what to do, do not channge my code and make sure to read #file:copilo
 - **Hook Version**: 1.02
 - **Date**: 07-04-2026 14:58
 - **Prompt**: can u help me update the readme? and make sure the journal is updated properly incase anything is missed
+### **New Interaction**
+- **Agent Version**: 2.2
+- **Date**: 07-04-2026 14:58
+- **User**: redowan-ahmed.sameer@epita.fr
+- **Prompt**: can u help me update the readme? and make sure the journal is updated properly incase anything is missed
+- **CoPilot Mode**: Edit
+- **CoPilot Model**: GPT-5.4 mini
+- **Socratic Mode**: ON
+- **Changes Made**: In progress; preparing README updates and ensuring this interaction is logged.
+- **Context and Reasons for Changes**: User requested documentation updates and journal completeness check.
+
+### **New Interaction**
+- **Agent Version**: 2.2
+- **Date**: 07-04-2026 14:59
+- **User**: redowan-ahmed.sameer@epita.fr
+- **Prompt**: can u help me update the readme? and make sure the journal is updated properly incase anything is missed
+- **CoPilot Mode**: Edit
+- **CoPilot Model**: GPT-5.4 mini
+- **Socratic Mode**: ON
+- **Changes Made**: Updated README to document fleeing behavior, random trajectories, updated game-logic architecture, and revised testing guidance; corrected stale test-suite description in project structure.
+- **Context and Reasons for Changes**: Kept README aligned with current movement/collision implementation and added practical testing recommendations.
+
+
+### **New Interaction**
+- **Hook Version**: 1.02
+- **Date**: 07-04-2026 14:59
+- **Prompt**: update repo to github
