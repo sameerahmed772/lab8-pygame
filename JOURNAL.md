@@ -66,3 +66,8 @@
 - **Prompt**: can you update the readme? I have implemented max speed and square size dependent speed functions
 - **Changes Made**: Updated README to document size-dependent speed behavior, including inverse size-speed relationship, max speed formula (`max_speed = SPEED_BASE_CONSTANT / size`), size range, and initial speed range.
 - **Context and Reasons for Changes**: README now reflects the latest gameplay/physics implementation so users and reviewers can understand why smaller squares move faster and how speed limits are calculated.
+
+### **New Interaction**
+- **Hook Version**: 1.02
+- **Date**: 07-04-2026 14:18
+- **Prompt**: how to implement fleeing, make small squares flee away from the bigger ones.   All square tend to keep certain randomness to their behavior/trajectory  Suggest me what to do, do not channge my code and make sure to read #file:copilot-instructions.md and #file:journal-logger.agent.md
