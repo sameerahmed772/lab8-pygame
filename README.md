@@ -1,9 +1,11 @@
 # Lab 8: Random Moving Squares
 
-A simple Python game built with Pygame featuring physics-based movement, collisions, and interactive gameplay. The latest version adds size-dependent movement, where smaller squares move faster and larger squares move slower.
+A Python game built with Pygame featuring size-based movement, fleeing behavior, collisions, and interactive gameplay.
 
 ## Features
 - **Size-Dependent Speed:** Each square has a random size and a max speed computed from its size
+- **Fleeing Behavior:** Smaller squares steer away from larger nearby squares
+- **Randomized Trajectories:** All squares keep natural drift through random acceleration
 - **Physics Engine:** Realistic bouncing, friction, acceleration, and collision detection
 - **Interactive Gameplay:** Click squares to destroy them and earn points
 - **Difficulty Levels:** Adjust game speed with keyboard controls
@@ -44,7 +46,7 @@ pytest test_main.py -v
 ```
 lab8-pygame/
 ├── main.py              # Main game code with physics and rendering
-├── test_main.py         # Comprehensive test suite (29 tests)
+├── test_main.py         # Pytest suite for game logic
 ├── requirements.txt     # Project dependencies
 ├── README.md           # This file
 └── JOURNAL.md          # Development log
@@ -59,7 +61,8 @@ The project follows the standard **Pygame Game Loop** pattern:
    - Update game state
 
 2. **Game Logic** (`update_squares`)
-   - Apply physics (acceleration, friction)
+   - Apply random acceleration and fleeing acceleration
+   - Enforce size-based speed caps
    - Handle wall bouncing
    - Detect square-to-square collisions
 
@@ -74,6 +77,7 @@ The project follows the standard **Pygame Game Loop** pattern:
 
 - **Friction:** 0.995 multiplier per frame (gradual velocity decay)
 - **Acceleration:** Random drift (-0.1 to +0.1) per frame
+- **Fleeing:** Smaller squares repel from larger squares inside `FLEE_RADIUS`
 - **Collision:** Simple elastic collision via velocity swapping
 - **Wall Bouncing:** Velocity reversal at screen boundaries
 
@@ -90,18 +94,17 @@ This means smaller squares are naturally faster, while larger squares move more 
 
 ## Testing
 
-The project includes **29 comprehensive tests** covering:
-- Square creation (valid counts, color ranges, velocity ranges)
-- Physics behavior (wall bouncing, friction, collisions)
-- Event handling (pause, difficulty, clicking, adding squares)
-- Integration scenarios
-
 Tests use pytest with mocked pygame to avoid display dependencies:
 ```bash
 pytest test_main.py -v        # Verbose output
 pytest test_main.py -q        # Quiet output
 pytest test_main.py::test_*   # Run specific test pattern
 ```
+
+Recommended focus areas for movement logic:
+- Unit tests for fleeing direction (distance from larger squares should increase)
+- Deterministic tests with patched randomness to avoid flaky results
+- Invariant checks (speed cap respected, squares remain in bounds)
 
 ## Dependencies
 

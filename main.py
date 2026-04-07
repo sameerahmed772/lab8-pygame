@@ -23,6 +23,10 @@ FRICTION: float = 0.995
 ACCELERATION_RANGE: Tuple[float, float] = (-0.1, 0.1)
 DEFAULT_COLOR_RANGE: Tuple[int, int] = (50, 255)
 
+# Fleeing Constants
+FLEE_RADIUS: float = 150.0
+FLEE_FORCE: float = 0.8
+
 # Rendering constants
 BG_COLOR: Tuple[int, int, int] = (30, 30, 30)
 BG_GRID_COLOR: Tuple[int, int, int] = (35, 40, 45)
@@ -177,7 +181,7 @@ def handle_events(squares: List[Square], game_state: Dict[str, Any]) -> bool:
 
 def update_squares(squares: List[Square], game_state: Dict[str, Any]) -> None:
     """
-    Update square positions, enforce size-based max speeds, and handle collisions.
+    Update square positions, enforce size-based max speeds, handle fleeing, and handle collisions.
     """
     if game_state["paused"]:
         return
@@ -185,17 +189,56 @@ def update_squares(squares: List[Square], game_state: Dict[str, Any]) -> None:
     diff_multiplier = game_state["difficulty"]
 
     for square in squares:
-        # 1. Apply constant acceleration (a slight random drift)
+        # 1. Base Random Acceleration (Keeps the trajectory erratic/random)
         accel_x = random.uniform(*ACCELERATION_RANGE) * diff_multiplier
         accel_y = random.uniform(*ACCELERATION_RANGE) * diff_multiplier
-        square["vel"][0] += accel_x
-        square["vel"][1] += accel_y
 
-        # 2. Apply friction
+        # 2. Calculate Fleeing Acceleration
+        flee_accel_x = 0.0
+        flee_accel_y = 0.0
+
+        # Calculate the true center of the current square
+        sq1_center_x = square["pos"][0] + (square["size"] / 2.0)
+        sq1_center_y = square["pos"][1] + (square["size"] / 2.0)
+
+        for other in squares:
+            # Don't compare a square to itself, and only flee if the other is strictly larger
+            if square is not other and other["size"] > square["size"]:
+
+                # Calculate the true center of the predator square
+                sq2_center_x = other["pos"][0] + (other["size"] / 2.0)
+                sq2_center_y = other["pos"][1] + (other["size"] / 2.0)
+
+                # Vector from predator center TO prey center (points away from predator)
+                dx = sq1_center_x - sq2_center_x
+                dy = sq1_center_y - sq2_center_y
+                distance = math.hypot(dx, dy)
+
+                # ZERO-DISTANCE PROTECTION
+                # If they are perfectly overlapping, force a tiny random offset
+                if distance == 0:
+                    dx = random.uniform(-0.1, 0.1)
+                    dy = random.uniform(-0.1, 0.1)
+                    distance = math.hypot(dx, dy)
+
+                # Only flee if within the perception radius
+                if distance < FLEE_RADIUS:
+                    # Weight the force: Stronger when closer, weaker when near the edge of the radius
+                    repulsion_intensity = (FLEE_RADIUS - distance) / FLEE_RADIUS
+
+                    # Normalize the vector (divide by distance) and scale by force and intensity
+                    flee_accel_x += (dx / distance) * FLEE_FORCE * repulsion_intensity
+                    flee_accel_y += (dy / distance) * FLEE_FORCE * repulsion_intensity
+
+        # 3. Apply Total Acceleration (Randomness + Fleeing) to Velocity
+        square["vel"][0] += accel_x + flee_accel_x
+        square["vel"][1] += accel_y + flee_accel_y
+
+        # 4. Apply friction
         square["vel"][0] *= FRICTION
         square["vel"][1] *= FRICTION
 
-        # 3. CAP MAX SPEED BASED ON SIZE
+        # 5. CAP MAX SPEED BASED ON SIZE
         max_speed = (SPEED_BASE_CONSTANT / square["size"]) * diff_multiplier
         current_speed = math.hypot(square["vel"][0], square["vel"][1])
 
@@ -205,7 +248,7 @@ def update_squares(squares: List[Square], game_state: Dict[str, Any]) -> None:
             square["vel"][0] *= scale
             square["vel"][1] *= scale
 
-        # 4. Move square using float positions for accuracy
+        # 6. Move square using float positions for accuracy
         square["pos"][0] += square["vel"][0]
         square["pos"][1] += square["vel"][1]
 
@@ -213,7 +256,7 @@ def update_squares(squares: List[Square], game_state: Dict[str, Any]) -> None:
         square["rect"].x = int(square["pos"][0])
         square["rect"].y = int(square["pos"][1])
 
-        # 5. Bounce off walls
+        # 7. Bounce off walls
         if square["rect"].left <= 0:
             square["rect"].left = 0
             bounce_off_wall(square, "x", -1)
@@ -228,7 +271,7 @@ def update_squares(squares: List[Square], game_state: Dict[str, Any]) -> None:
             square["rect"].bottom = HEIGHT
             bounce_off_wall(square, "y", 1)
 
-    # 6. Collision detection between squares
+    # 8. Collision detection between squares
     for i in range(len(squares)):
         for j in range(i + 1, len(squares)):
             if squares[i]["rect"].colliderect(squares[j]["rect"]):
