@@ -123,3 +123,19 @@ Suggest me what to do, do not channge my code and make sure to read #file:copilo
 - **Hook Version**: 1.02
 - **Date**: 07-04-2026 14:42
 - **Prompt**: yes, help me test it, and what type of test is suitable for this?
+### **New Interaction**
+- **Agent Version**: 2.2
+- **Date**: 07-04-2026 14:45
+- **User**: redowan-ahmed.sameer@epita.fr
+- **Prompt**: yes, help me test it, and what type of test is suitable for this?
+- **CoPilot Mode**: Ask
+- **CoPilot Model**: GPT-5.4 mini
+- **Socratic Mode**: ON
+- **Changes Made**: No code changes; prepared to run and assess tests for movement and fleeing behavior.
+- **Context and Reasons for Changes**: The user asked for testing help and suitable testing strategy, so I logged the prompt and started validation work.
+
+
+### **New Interaction**
+- **Hook Version**: 1.02
+- **Date**: 07-04-2026 14:53
+- **Prompt**: can u check my code and tell me why the collision is still there and also give a review of my code?
