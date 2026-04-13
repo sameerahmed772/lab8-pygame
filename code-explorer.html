@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code Explorer - lab8-pygame</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+:root {
+  --bg: #1e1e2e;
+  --surface: #2a2a3e;
+  --surface2: #313148;
+  --text: #cdd6f4;
+  --muted: #a6adc8;
+  --accent: #89b4fa;
+  --green: #a6e3a1;
+  --yellow: #f9e2af;
+  --red: #f38ba8;
+  --mono: 'Courier New', Courier, monospace;
+  --radius: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; }
+a { color: var(--accent); }
+a:hover { text-decoration: underline; }
+header { padding: 1.5rem 2rem; border-bottom: 1px solid #3a3a55; background: var(--surface); }
+header h1 { font-size: 1.4rem; color: var(--accent); letter-spacing: -0.3px; }
+header p { color: var(--muted); font-size: 0.88rem; margin-top: 0.2rem; }
+header .file-badge { display: inline-block; background: var(--surface2); border-radius: 4px; padding: 0.1rem 0.5rem; font-family: var(--mono); font-size: 0.8rem; color: var(--yellow); margin-top: 0.3rem; }
+.tab-nav { display: flex; padding: 0 2rem; background: var(--surface); border-bottom: 1px solid #3a3a55; flex-wrap: wrap; gap: 0; }
+.tab-btn { padding: 0.75rem 1.2rem; cursor: pointer; border: none; background: none; color: var(--muted); font-size: 0.88rem; border-bottom: 2px solid transparent; transition: all 0.18s; white-space: nowrap; }
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+.tab-panel { display: none; padding: 2rem; max-width: 1280px; margin: 0 auto; }
+.tab-panel.active { display: block; }
+.card { background: var(--surface); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #3a3a55; }
+.card h3 { color: var(--accent); margin-bottom: 0.6rem; font-size: 1rem; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+@media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+.arch-subnav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.arch-btn { padding: 0.35rem 0.85rem; border-radius: 20px; border: 1px solid #444; background: none; color: var(--muted); cursor: pointer; font-size: 0.82rem; transition: all 0.18s; }
+.arch-btn:hover { border-color: var(--accent); color: var(--text); }
+.arch-btn.active { background: var(--accent); color: #1e1e2e; border-color: var(--accent); font-weight: 600; }
+.arch-panel { display: none; }
+.arch-panel.active { display: block; }
+.diag-container { background: var(--surface2); border-radius: var(--radius); padding: 1.5rem; min-height: 280px; overflow-x: auto; display: flex; justify-content: center; align-items: flex-start; }
+.diag-container svg { max-width: 100%; height: auto; }
+.diag-title { color: var(--accent); font-size: 1.05rem; font-weight: 600; margin-bottom: 0.75rem; }
+.diag-caption { color: var(--muted); font-size: 0.82rem; margin-top: 0.75rem; font-style: italic; border-left: 2px solid #444; padding-left: 0.6rem; }
+.pattern-card { background: var(--surface2); border-radius: var(--radius); padding: 1.2rem; margin-bottom: 1rem; border: 1px solid #3a3a55; }
+.pattern-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.pattern-icon { font-size: 1.1rem; }
+.pattern-title { font-weight: 600; color: var(--text); font-size: 0.95rem; }
+.pattern-desc { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.75rem; }
+.pattern-layers { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.6rem; }
+.layer { font-size: 0.8rem; padding: 0.28rem 0.6rem; border-radius: 4px; line-height: 1.4; }
+.layer-basics { background: #1e3a2a; color: #a6e3a1; }
+.layer-eng { background: #3a2e1a; color: #f9e2af; }
+.layer-arch { background: #1a2a3e; color: #89b4fa; }
+.layer-label { font-weight: 700; margin-right: 0.35rem; }
+.ext-link { display: inline-block; font-size: 0.8rem; color: var(--accent); text-decoration: none; margin-top: 0.2rem; }
+.ext-link:hover { text-decoration: underline; }
+.fix-hint { background: #1e1e2e; border-left: 3px solid var(--yellow); padding: 0.4rem 0.7rem; border-radius: 0 4px 4px 0; font-size: 0.8rem; color: var(--text); margin-top: 0.5rem; }
+code { font-family: var(--mono); font-size: 0.85em; background: #12121e; padding: 0.05em 0.3em; border-radius: 3px; color: var(--yellow); }
+.badge { display: inline-block; padding: 0.18rem 0.55rem; border-radius: 12px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.3px; }
+.badge-high { background: #4a1a2a; color: var(--red); }
+.badge-medium { background: #3e2e10; color: var(--yellow); }
+.badge-low { background: #1a3220; color: var(--green); }
+.badge-score { background: var(--surface2); color: var(--accent); font-size: 1rem; font-weight: 700; padding: 0.3rem 0.8rem; border: 1px solid var(--accent); border-radius: var(--radius); }
+.type-banner { display: flex; align-items: center; gap: 1.2rem; padding: 1.1rem 1.5rem; background: var(--surface2); border-radius: var(--radius); margin-bottom: 1.5rem; border: 1px solid #3a3a55; }
+.score-big { font-size: 2.2rem; font-weight: 800; color: var(--accent); line-height: 1; }
+.score-verdict { color: var(--muted); font-size: 0.88rem; }
+.review-layout { display: grid; grid-template-columns: 1fr 1.5fr; gap: 1.5rem; }
+@media (max-width: 800px) { .review-layout { grid-template-columns: 1fr; } }
+.review-left { background: var(--surface); border-radius: var(--radius); padding: 1.1rem; border: 1px solid #3a3a55; }
+.review-right { background: var(--surface); border-radius: var(--radius); padding: 1.5rem; border: 1px solid #3a3a55; min-height: 320px; }
+.review-item { padding: 0.7rem 0.8rem; border-radius: 6px; cursor: pointer; margin-bottom: 0.5rem; border: 1px solid transparent; transition: all 0.15s; }
+.review-item:hover { border-color: #444; background: var(--surface2); }
+.review-item.selected { border-color: var(--accent); background: var(--surface2); }
+.ri-titlerow { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+.ri-title { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+.ri-note { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
+pre.snippet { background: #12121e; border-radius: 5px; padding: 0.7rem; font-size: 0.76rem; overflow-x: auto; color: #cdd6f4; font-family: var(--mono); margin: 0.6rem 0; line-height: 1.5; border: 1px solid #2a2a3e; }
+.detail-head { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.9rem; }
+.detail-title { color: var(--accent); font-size: 1rem; font-weight: 700; }
+.detail-body { color: var(--muted); font-size: 0.86rem; line-height: 1.65; margin-bottom: 0.9rem; }
+.hint-box { background: var(--surface2); border-left: 3px solid var(--accent); padding: 0.6rem 0.8rem; border-radius: 0 4px 4px 0; font-size: 0.84rem; color: var(--text); }
+.perf-card { background: var(--surface2); border-radius: var(--radius); padding: 1.2rem; margin-bottom: 1rem; border: 1px solid #3a3a55; }
+.perf-title { font-weight: 600; color: var(--text); margin-bottom: 0.4rem; }
+.perf-desc { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.5rem; }
+.ns-item { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem 1.2rem; background: var(--surface2); border-radius: var(--radius); margin-bottom: 0.8rem; border: 1px solid #3a3a55; }
+.ns-num { font-size: 1.4rem; font-weight: 800; color: var(--accent); min-width: 2rem; line-height: 1.2; }
+.ns-text a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: 0.95rem; }
+.ns-text a:hover { text-decoration: underline; }
+.ns-desc { color: var(--muted); font-size: 0.83rem; margin-top: 0.2rem; }
+.fallback { background: #2a1215; color: var(--red); padding: 1rem; border-radius: 6px; font-size: 0.72rem; font-family: var(--mono); overflow-x: auto; white-space: pre-wrap; }
+.section-head { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; }
+.section-head.green { color: var(--green); }
+.section-head.yellow { color: var(--yellow); }
+.section-head.red { color: var(--red); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Code Explorer</h1>
+  <span class="file-badge">main.py + test_main.py</span>
+  <p style="margin-top:0.4rem;">Project: lab8-pygame | Pygame simulation with typed constants, physics rules, and pytest coverage.</p>
+</header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('overview', this)">Overview</button>
+  <button class="tab-btn" onclick="switchTab('architecture', this)">Architecture</button>
+  <button class="tab-btn" onclick="switchTab('patterns', this)">Patterns</button>
+  <button class="tab-btn" onclick="switchTab('review', this)">Code Review</button>
+  <button class="tab-btn" onclick="switchTab('performance', this)">Performance</button>
+  <button class="tab-btn" onclick="switchTab('nextsteps', this)">Next Steps</button>
+</nav>
+
+<section id="tab-overview" class="tab-panel active">
+  <div class="card">
+    <h3>Project Snapshot</h3>
+    <p>This project builds a real-time moving-square simulation with size-based speed limits, random acceleration, predator-prey style fleeing, wall bounce, and click-to-score interactions. The game loop in <code>main.py</code> follows a clean event/update/render cycle and uses typed constants for readability and tuning.</p>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <h3>Runtime Behavior</h3>
+      <p>Each frame: input events are consumed, square physics is updated unless paused, then scene and overlays are rendered. Difficulty modifies acceleration and effective speed cap.</p>
+      <p style="margin-top:0.5rem; color:var(--muted);">Core controls: SPACE add square, P pause, 1/2/3 difficulty, left click remove square and add score.</p>
+    </div>
+    <div class="card">
+      <h3>Testing Status</h3>
+      <p>Test suite intent is strong, but some tests do not match the current API and constants in <code>main.py</code>. Explorer review tab highlights the highest-impact mismatches first.</p>
+      <p style="margin-top:0.5rem;"><span class="badge badge-medium">Action needed</span> align tests with production constants and function signatures.</p>
+    </div>
+  </div>
+</section>
+
+<section id="tab-architecture" class="tab-panel">
+  <div class="arch-subnav">
+    <button class="arch-btn active" onclick="switchArch('flow', this)">Game Loop Flow</button>
+    <button class="arch-btn" onclick="switchArch('physics', this)">Physics Pipeline</button>
+    <button class="arch-btn" onclick="switchArch('events', this)">Event Paths</button>
+  </div>
+
+  <div id="arch-flow" class="arch-panel active">
+    <div class="diag-title">High-Level Loop</div>
+    <div id="diag-gameflow" class="diag-container"></div>
+    <div class="diag-caption">The loop keeps behavior deterministic in ordering: input first, world update second, render last.</div>
+  </div>
+
+  <div id="arch-physics" class="arch-panel">
+    <div class="diag-title">Per-Square Update Steps</div>
+    <div id="diag-physics" class="diag-container"></div>
+    <div class="diag-caption">Velocity composition combines noise and fleeing before clamping speed by inverse square size.</div>
+  </div>
+
+  <div id="arch-events" class="arch-panel">
+    <div class="diag-title">Input Decision Tree</div>
+    <div id="diag-events" class="diag-container"></div>
+    <div class="diag-caption">Input logic is centralized in handle_events, making controls easy to extend.</div>
+  </div>
+</section>
+
+<section id="tab-patterns" class="tab-panel">
+  <div class="pattern-card">
+    <div class="pattern-header">
+      <span class="pattern-icon">1</span>
+      <span class="pattern-title">Typed Constant Configuration</span>
+    </div>
+    <div class="pattern-desc">A large constant block with type hints creates a single source of truth for physics, visuals, and UI tuning.</div>
+    <div class="pattern-layers">
+      <div class="layer layer-basics"><span class="layer-label">Basics:</span>Better readability and fewer magic numbers.</div>
+      <div class="layer layer-eng"><span class="layer-label">Engineering:</span>Easier balancing and safer refactors.</div>
+      <div class="layer layer-arch"><span class="layer-label">Architecture:</span>Parameter-driven gameplay design.</div>
+    </div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-header">
+      <span class="pattern-icon">2</span>
+      <span class="pattern-title">Data-Oriented Entity Model</span>
+    </div>
+    <div class="pattern-desc">Squares are plain dictionaries with keys like rect, pos, vel, size, making updates explicit and serializable.</div>
+    <div class="pattern-layers">
+      <div class="layer layer-basics"><span class="layer-label">Basics:</span>Easy to inspect and print for debugging.</div>
+      <div class="layer layer-eng"><span class="layer-label">Engineering:</span>Supports quick iteration with low ceremony.</div>
+      <div class="layer layer-arch"><span class="layer-label">Architecture:</span>Entity-state separates from rendering functions.</div>
+    </div>
+    <div class="fix-hint">Future step: migrate to dataclass if stronger structural guarantees are needed.</div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-header">
+      <span class="pattern-icon">3</span>
+      <span class="pattern-title">Function-Based Pipeline</span>
+    </div>
+    <div class="pattern-desc">Small focused functions (<code>handle_events</code>, <code>update_squares</code>, <code>render</code>) reduce coupling and improve testability.</div>
+    <div class="pattern-layers">
+      <div class="layer layer-basics"><span class="layer-label">Basics:</span>Simpler mental model for beginners.</div>
+      <div class="layer layer-eng"><span class="layer-label">Engineering:</span>Unit tests can target logic boundaries.</div>
+      <div class="layer layer-arch"><span class="layer-label">Architecture:</span>Classic game-loop separation of concerns.</div>
+    </div>
+  </div>
+</section>
+
+<section id="tab-review" class="tab-panel">
+  <div class="type-banner">
+    <div class="score-big">74</div>
+    <div>
+      <div class="badge badge-score">Code Health Score</div>
+      <div class="score-verdict">Strong runtime structure; medium risk from test drift and one unused function parameter.</div>
+    </div>
+  </div>
+
+  <div class="review-layout">
+    <div class="review-left" id="review-list">
+      <div class="review-item" id="ri-0" onclick="selectReview(0)">
+        <div class="ri-titlerow"><span class="ri-title">Broken test import constant</span><span class="badge badge-high">high</span></div>
+        <div class="ri-note">test_main.py imports a symbol not present in main.py.</div>
+      </div>
+      <div class="review-item" id="ri-1" onclick="selectReview(1)">
+        <div class="ri-titlerow"><span class="ri-title">Invalid create_squares parameter in tests</span><span class="badge badge-high">high</span></div>
+        <div class="ri-note">Tests call create_squares with unsupported vel_range argument.</div>
+      </div>
+      <div class="review-item" id="ri-2" onclick="selectReview(2)">
+        <div class="ri-titlerow"><span class="ri-title">Unused bounce helper parameter</span><span class="badge badge-low">low</span></div>
+        <div class="ri-note">velocity_sign argument is passed but never read.</div>
+      </div>
+      <div class="review-item" id="ri-3" onclick="selectReview(3)">
+        <div class="ri-titlerow"><span class="ri-title">Collision push not symmetric</span><span class="badge badge-medium">medium</span></div>
+        <div class="ri-note">Only one square receives position push after velocity swap.</div>
+      </div>
+    </div>
+    <div class="review-right" id="review-detail-panel"></div>
+  </div>
+</section>
+
+<section id="tab-performance" class="tab-panel">
+  <div class="perf-card">
+    <div class="perf-title">O(n^2) fleeing checks and collisions</div>
+    <div class="perf-desc">Both predator scan and collision scan iterate over square pairs, which is acceptable for ~15 entities but scales poorly for larger counts.</div>
+    <div class="fix-hint">Use spatial partitioning (uniform grid) when increasing population significantly.</div>
+  </div>
+  <div class="perf-card">
+    <div class="perf-title">Rendering cost remains modest</div>
+    <div class="perf-desc">Rect rendering and text overlays are lightweight; frame pacing with <code>clock.tick(FPS)</code> keeps runtime stable.</div>
+  </div>
+  <div class="perf-card">
+    <div class="perf-title">Determinism for tests</div>
+    <div class="perf-desc">Random acceleration and spawn values make some tests naturally noisy unless random sources are patched.</div>
+    <div class="fix-hint">Patch <code>random.uniform</code> and <code>random.randint</code> in unit tests for reproducible physics assertions.</div>
+  </div>
+</section>
+
+<section id="tab-nextsteps" class="tab-panel">
+  <div class="section-head green">Recommended Next Steps</div>
+
+  <div class="ns-item">
+    <div class="ns-num">1</div>
+    <div class="ns-text">
+      <a href="test_main.py">Fix test/production API mismatch</a>
+      <div class="ns-desc">Replace SQUARE_SIZE with size-aware bounds from each square, and remove vel_range calls unless implemented in main.py.</div>
+    </div>
+  </div>
+
+  <div class="ns-item">
+    <div class="ns-num">2</div>
+    <div class="ns-text">
+      <a href="main.py">Refine collision resolution</a>
+      <div class="ns-desc">Apply positional separation to both colliding entities to reduce overlap artifacts and repeated swaps.</div>
+    </div>
+  </div>
+
+  <div class="ns-item">
+    <div class="ns-num">3</div>
+    <div class="ns-text">
+      <a href="test_main.py">Add deterministic physics tests</a>
+      <div class="ns-desc">Mock randomness and assert expected velocity clamping and flee-direction behavior at known distances.</div>
+    </div>
+  </div>
+</section>
+
+<script>
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function switchArch(name, btn) {
+  document.querySelectorAll('.arch-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.arch-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('arch-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+const reviewItems = [
+  {
+    title: 'Broken test import constant',
+    severity: 'high',
+    snippet: "from main import (..., WIDTH, HEIGHT, SQUARE_SIZE)",
+    fullExplanation: 'test_main.py imports SQUARE_SIZE, but main.py defines MIN_SQUARE_SIZE and MAX_SQUARE_SIZE instead. This causes import failure before tests run.',
+    improvementHint: 'Update tests to use the runtime square size from each entity, or import MIN_SQUARE_SIZE / MAX_SQUARE_SIZE and adapt bounds checks.'
+  },
+  {
+    title: 'Invalid create_squares parameter in tests',
+    severity: 'high',
+    snippet: "create_squares(10, vel_range=(-2.0, 2.0))",
+    fullExplanation: 'create_squares currently accepts only (num_squares, color_range). Passing vel_range raises TypeError and blocks test execution.',
+    improvementHint: 'Either remove vel_range-based tests or extend create_squares with an optional vel_range parameter and document the behavior.'
+  },
+  {
+    title: 'Unused bounce helper parameter',
+    severity: 'low',
+    snippet: "def bounce_off_wall(square: Square, axis: str, velocity_sign: int) -> None:",
+    fullExplanation: 'velocity_sign is passed at call sites but not used in the helper body. This creates confusion about intended wall-bounce semantics.',
+    improvementHint: 'Remove velocity_sign from function signature or use it intentionally to set direction explicitly.'
+  },
+  {
+    title: 'Collision push not symmetric',
+    severity: 'medium',
+    snippet: "squares[i]['pos'][0] += squares[i]['vel'][0]",
+    fullExplanation: 'After velocity swap, only one square receives position correction. Under dense overlap this can leave entities interpenetrating and repeatedly colliding.',
+    improvementHint: 'Push both i and j in opposite directions (or along center difference) to resolve overlap more robustly.'
+  }
+];
+
+function escH(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');
+}
+
+function selectReview(id) {
+  document.querySelectorAll('.review-item').forEach(el => el.classList.remove('selected'));
+  document.getElementById('ri-' + id).classList.add('selected');
+  const item = reviewItems[id];
+  const sevClass = 'badge-' + item.severity;
+  const body = item.fullExplanation.replace(/\n/g, '<br>');
+  document.getElementById('review-detail-panel').innerHTML = `
+    <div>
+      <div class="detail-head">
+        <span class="detail-title">${escH(item.title)}</span>
+        <span class="badge ${escH(sevClass)}">${escH(item.severity)}</span>
+      </div>
+      <div class="detail-body">${body}</div>
+      <pre class="snippet">${escH(item.snippet)}</pre>
+      <div class="hint-box">&#128161; <strong>Improvement:</strong> ${escH(item.improvementHint)}</div>
+    </div>`;
+}
+
+mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+
+const diagrams = {
+  gameflow: `flowchart TD
+    A[main] --> B[init_pygame]
+    B --> C[create_squares]
+    C --> D{running}
+    D --> E[handle_events]
+    E --> F[update_squares]
+    F --> G[render]
+    G --> H[clock.tick FPS]
+    H --> D`,
+
+  physics: `flowchart TD
+    A[for each square] --> B[random accel]
+    B --> C[flee accel from larger squares]
+    C --> D[apply total accel to vel]
+    D --> E[apply friction]
+    E --> F[cap speed by 100 size^-1]
+    F --> G[update float pos]
+    G --> H[sync pygame rect]
+    H --> I[wall bounce]
+    I --> J[pairwise collision pass]`,
+
+  events: `flowchart TD
+    A[event loop] --> B{event type}
+    B -->|QUIT| C[return False]
+    B -->|KEYDOWN SPACE| D[add square]
+    B -->|KEYDOWN P| E[toggle paused]
+    B -->|KEYDOWN 1/2/3| F[set difficulty]
+    B -->|MOUSE LEFT| G[remove top hit square]
+    D --> H[continue]
+    E --> H
+    F --> H
+    G --> H
+    C --> Z[end]`
+};
+
+let renderCounter = 0;
+
+async function renderDiagram(key, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const source = diagrams[key];
+  if (!source) {
+    container.innerHTML = '<p style="color:var(--muted)">No diagram source found.</p>';
+    return;
+  }
+  const uid = 'mmd-' + key + '-' + (++renderCounter);
+  try {
+    const rendered = await mermaid.render(uid, source);
+    container.innerHTML = rendered.svg;
+    if (typeof rendered.bindFunctions === 'function') {
+      rendered.bindFunctions(container);
+    }
+  } catch (err) {
+    container.innerHTML = '<pre class="fallback">Render failed: ' + err.message + '\n\nSource:\n' + source + '</pre>';
+  }
+}
+
+async function renderAll() {
+  const keys = Object.keys(diagrams);
+  for (const key of keys) {
+    await renderDiagram(key, 'diag-' + key);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  selectReview(0);
+  renderAll();
+});
+</script>
+</body>
+</html>
