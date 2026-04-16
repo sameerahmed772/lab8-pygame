@@ -1,126 +1,100 @@
-# Lab 8: Random Moving Squares
+# Pygame Lab 8: Life Span and Rebirth
 
-A Python game built with Pygame featuring size-based movement, fleeing behavior, collisions, and interactive gameplay.
+A real-time Pygame simulation where colorful squares move with dynamic behavior, age over time, and are reborn after reaching their lifespan.
+
+## Overview
+
+This project demonstrates:
+- Real-time animation and frame-based updates
+- Per-object lifespan tracking using millisecond timers
+- Automatic rebirth of expired entities
+- Keyboard and mouse interactivity
+- Difficulty scaling and pause control
 
 ## Features
-- **Size-Dependent Speed:** Each square has a random size and a max speed computed from its size
-- **Fleeing Behavior:** Smaller squares steer away from larger nearby squares
-- **Randomized Trajectories:** All squares keep natural drift through random acceleration
-- **Physics Engine:** Realistic bouncing, friction, acceleration, and collision detection
-- **Interactive Gameplay:** Click squares to destroy them and earn points
-- **Difficulty Levels:** Adjust game speed with keyboard controls
-- **Pause System:** Pause and resume at any time
-- **UI Overlay:** Real-time display of FPS, score, timer, and game state
-- **Procedural Background:** Grid-based background for visual polish
+
+- Randomly generated squares with:
+  - Variable size
+  - Random color
+  - Independent velocity and acceleration
+  - Individual life span
+- Life Span + Rebirth system:
+  - Each square stores its own birth time
+  - Age is computed in the update loop
+  - When age exceeds life span, the square is removed and a new square is spawned
+- Movement behavior:
+  - Random acceleration
+  - Friction-based damping
+  - Speed caps based on size
+  - Wall bounce handling
+  - Basic collision response between squares
+- HUD display:
+  - FPS
+  - Number of active squares
+  - Score
+  - Elapsed timer
+  - Current difficulty multiplier
+  - Pause overlay
 
 ## Controls
-| Control | Action |
-|---------|--------|
-| **Left Click** | Destroy a square and earn +100 points |
-| **SPACE** | Add a new random square to the screen |
-| **P** | Pause or unpause the game |
-| **1** | Set difficulty to Normal (1.0x) |
-| **2** | Set difficulty to Hard (1.5x) |
-| **3** | Set difficulty to Extreme (2.0x) |
 
-## How to Run
+- P: Pause or resume simulation
+- Space: Spawn one additional square
+- 1: Set difficulty to 1.0x
+- 2: Set difficulty to 1.5x
+- 3: Set difficulty to 2.0x
+- Left Mouse Click: Remove a clicked square and gain score
+- Window Close: Exit the game
 
-### Setup
-1. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+## Life Span + Rebirth Logic
 
-### Run the Game
-```bash
-python main.py
-```
-*(Note: You may need to use `python3` depending on your setup)*
+Each square has two lifespan fields:
+- birth_time: Timestamp (milliseconds) when the square was created
+- life_span: Randomized duration (milliseconds) the square may live
 
-### Run Tests
-```bash
-pytest test_main.py -v
-```
+During each update:
+1. current_time is read from pygame.time.get_ticks()
+2. age is evaluated as current_time - birth_time
+3. If age exceeds life_span:
+   - remove the old square
+   - immediately spawn a replacement square
+
+This keeps the simulation population continuously renewing over time.
 
 ## Project Structure
-```
-lab8-pygame/
-├── main.py              # Main game code with physics and rendering
-├── test_main.py         # Pytest suite for game logic
-├── requirements.txt     # Project dependencies
-├── README.md           # This file
-└── JOURNAL.md          # Development log
-```
 
-## Code Architecture
+- main.py: Core game loop, event handling, simulation, and rendering
+- requirements.txt: Python dependencies
+- test_main.py: Automated tests (if present in your workflow)
 
-The project follows the standard **Pygame Game Loop** pattern:
+## Requirements
 
-1. **Event Handling** (`handle_events`)
-   - Process user input (mouse clicks, keyboard)
-   - Update game state
+- Python 3.10+
+- pygame
 
-2. **Game Logic** (`update_squares`)
-   - Apply random acceleration and fleeing acceleration
-   - Enforce size-based speed caps
-   - Handle wall bouncing
-   - Detect square-to-square collisions
+## Run
 
-3. **Rendering** (`render` + `render_text_overlays`)
-   - Draw background and squares
-   - Render UI text overlays
+Install dependencies:
 
-4. **Frame Rate Management**
-   - Maintain consistent 60 FPS
+pip install -r requirements.txt
 
-## Physics Implementation
+Start the game:
 
-- **Friction:** 0.995 multiplier per frame (gradual velocity decay)
-- **Acceleration:** Random drift (-0.1 to +0.1) per frame
-- **Fleeing:** Smaller squares repel from larger squares inside `FLEE_RADIUS`
-- **Collision:** Simple elastic collision via velocity swapping
-- **Wall Bouncing:** Velocity reversal at screen boundaries
+python main.py
 
-## Size-Speed Model
+## Notes
 
-Squares now use an inverse size-to-speed relationship:
+- Timing uses milliseconds from pygame.time.get_ticks(), which is suitable for per-entity lifecycle tracking in a frame loop.
+- Lifespan constants are configured in milliseconds for consistency.
+- Pause mode freezes simulation updates, including lifespan progression.
 
-- Square size range: 15 to 80 pixels
-- Max speed formula: `max_speed = SPEED_BASE_CONSTANT / size`
-- Current base constant: `SPEED_BASE_CONSTANT = 100.0`
-- Initial speed is randomized in `[0.5 * max_speed, max_speed]`
+## Future Improvements
 
-This means smaller squares are naturally faster, while larger squares move more slowly.
+- Replace dictionary-based square data with dataclass or TypedDict for stronger typing
+- Add configurable spawn profiles and lifespan presets
+- Add automated tests for expiry and rebirth edge cases
+- Add sound and visual effects for rebirth events
 
-## Testing
+## License
 
-Tests use pytest with mocked pygame to avoid display dependencies:
-```bash
-pytest test_main.py -v        # Verbose output
-pytest test_main.py -q        # Quiet output
-pytest test_main.py::test_*   # Run specific test pattern
-```
-
-Recommended focus areas for movement logic:
-- Unit tests for fleeing direction (distance from larger squares should increase)
-- Deterministic tests with patched randomness to avoid flaky results
-- Invariant checks (speed cap respected, squares remain in bounds)
-
-## Dependencies
-
-- **pygame-ce** (Community Edition) — Cross-platform game development library
-- **pytest** — Testing framework
-
-## Learning Outcomes
-
-After completing this project, you'll understand:
-- Pygame initialization and the main game loop
-- Event-driven programming patterns
-- Physics simulation basics
-- Type hints and mypy compliance
-- Test-driven development practices
-- Code organization and refactoring
-
-## Development Notes
-
-All physics constants, colors, and UI parameters are defined at the top of `main.py` for easy customization. See the `# CONSTANTS` section for adjustable values like screen size, FPS, and physics parameters.
+Use according to your course or repository policy.
