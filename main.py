@@ -6,28 +6,27 @@ from typing import List, Dict, Tuple, Optional, Any
 # ============================================================================
 # CONSTANTS
 # ============================================================================
-# Screen dimensions
 WIDTH: int = 800
 HEIGHT: int = 600
 FPS: int = 60
 
-# Square properties
 MIN_SQUARE_SIZE: int = 15
 MAX_SQUARE_SIZE: int = 80
 NUM_SQUARES: int = 15
 SQUARE_OUTLINE_WIDTH: int = 2
 
-# Physics constants
-SPEED_BASE_CONSTANT: float = 100.0  # Formula: Max Speed = 100 / size
+# LIFE SPAN CONSTANTS (Seconds converted to milliseconds)
+MIN_LIFE_SPAN: int = 30 * 1000
+MAX_LIFE_SPAN: int = 180 * 1000
+
+SPEED_BASE_CONSTANT: float = 100.0
 FRICTION: float = 0.995
 ACCELERATION_RANGE: Tuple[float, float] = (-0.1, 0.1)
 DEFAULT_COLOR_RANGE: Tuple[int, int] = (50, 255)
 
-# Fleeing Constants
 FLEE_RADIUS: float = 150.0
 FLEE_FORCE: float = 0.8
 
-# Rendering constants
 BG_COLOR: Tuple[int, int, int] = (30, 30, 30)
 BG_GRID_COLOR: Tuple[int, int, int] = (35, 40, 45)
 BG_BASE_COLOR: Tuple[int, int, int] = (20, 25, 30)
@@ -38,25 +37,19 @@ PAUSE_TEXT_COLOR: Tuple[int, int, int] = (255, 50, 50)
 FONT_SIZE: int = 24
 PAUSE_FONT_SIZE: int = 72
 
-# UI Layout
 TEXT_OFFSET_X: int = 10
 TEXT_LINE_HEIGHT: int = 25
 SCORE_INCREMENT: int = 100
 DIFFICULTY_LEVELS: Dict[int, float] = {1: 1.0, 2: 1.5, 3: 2.0}
 
-# Type alias for clarity
 Square = Dict[str, Any]
-
 
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
 
 
-def bounce_off_wall(square: Square, axis: str, velocity_sign: int) -> None:
-    """
-    Handle bouncing off walls by reversing velocity and resetting position.
-    """
+def bounce_off_wall(square: Square, axis: str) -> None:
     if axis == "x":
         square["pos"][0] = float(square["rect"].x)
         square["vel"][0] *= -1
@@ -71,57 +64,42 @@ def bounce_off_wall(square: Square, axis: str, velocity_sign: int) -> None:
 
 
 def init_pygame(fullscreen: bool = False) -> Tuple[pygame.Surface, pygame.time.Clock]:
-    """
-    Initialize Pygame and return the screen and clock objects.
-    """
-    try:
-        pygame.init()
-        pygame.font.init()
-
-        flags = pygame.FULLSCREEN if fullscreen else 0
-        screen = pygame.display.set_mode((WIDTH, HEIGHT), flags)
-        pygame.display.set_caption("Lab 8: Random Moving Squares (Size = Speed)")
-        clock = pygame.time.Clock()
-
-        return screen, clock
-    except pygame.error as e:
-        print(f"Critical Error: Failed to initialize Pygame display. Details: {e}")
-        raise SystemExit
+    pygame.init()
+    pygame.font.init()
+    flags = pygame.FULLSCREEN if fullscreen else 0
+    screen = pygame.display.set_mode((WIDTH, HEIGHT), flags)
+    pygame.display.set_caption("Lab 8: Life Span & Rebirth")
+    clock = pygame.time.Clock()
+    return screen, clock
 
 
 def create_squares(
     num_squares: int,
     color_range: Tuple[int, int] = DEFAULT_COLOR_RANGE,
 ) -> List[Square]:
-    """
-    Create a list of square dictionaries with random sizes, colors, and speeds.
-    """
-    if num_squares <= 0:
-        raise ValueError("Parameter num_squares must be greater than 0.")
+    squares: List[Square] = []
+    current_time: int = pygame.time.get_ticks()
 
-    squares = []
     for _ in range(num_squares):
-        # Generate random size
-        size = random.randint(MIN_SQUARE_SIZE, MAX_SQUARE_SIZE)
-
-        rect = pygame.Rect(
+        size: int = random.randint(MIN_SQUARE_SIZE, MAX_SQUARE_SIZE)
+        rect: pygame.Rect = pygame.Rect(
             random.randint(0, WIDTH - size),
             random.randint(0, HEIGHT - size),
             size,
             size,
         )
-        color = (
+        color: Tuple[int, int, int] = (
             random.randint(*color_range),
             random.randint(*color_range),
             random.randint(*color_range),
         )
 
-        # Max speed formula: F(size) = 100 / size
-        max_speed = SPEED_BASE_CONSTANT / size
+        max_speed: float = SPEED_BASE_CONSTANT / size
+        angle: float = random.uniform(0, 2 * math.pi)
+        init_speed: float = random.uniform(max_speed * 0.5, max_speed)
 
-        # Generate random initial trajectory
-        angle = random.uniform(0, 2 * math.pi)
-        init_speed = random.uniform(max_speed * 0.5, max_speed)
+        # Added birth_time and life_span (ms)
+        life_span: int = random.randint(MIN_LIFE_SPAN, MAX_LIFE_SPAN)
 
         squares.append(
             {
@@ -130,6 +108,8 @@ def create_squares(
                 "color": color,
                 "vel": [math.cos(angle) * init_speed, math.sin(angle) * init_speed],
                 "size": size,
+                "birth_time": current_time,
+                "life_span": life_span,
             }
         )
     return squares
@@ -141,149 +121,114 @@ def create_squares(
 
 
 def handle_events(squares: List[Square], game_state: Dict[str, Any]) -> bool:
-    """
-    Handle all pygame events safely.
-    """
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             return False
-
         elif event.type == pygame.KEYDOWN:
-            # Spacebar to add a new square
             if event.key == pygame.K_SPACE:
-                squares.extend(create_squares(1, DEFAULT_COLOR_RANGE))
-
-            # 'P' to pause/resume
+                squares.extend(create_squares(1))
             elif event.key == pygame.K_p:
                 game_state["paused"] = not game_state["paused"]
-
-            # Difficulty levels (Support both top row numbers and numpad)
             elif event.key in (pygame.K_1, pygame.K_KP1):
                 game_state["difficulty"] = DIFFICULTY_LEVELS.get(1, 1.0)
             elif event.key in (pygame.K_2, pygame.K_KP2):
                 game_state["difficulty"] = DIFFICULTY_LEVELS.get(2, 1.5)
             elif event.key in (pygame.K_3, pygame.K_KP3):
                 game_state["difficulty"] = DIFFICULTY_LEVELS.get(3, 2.0)
-
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            # Left click to remove squares and increase score
             if event.button == 1:
                 mouse_pos = event.pos
-                # Iterate backwards so we remove the "top" square drawn
                 for s in reversed(squares):
                     if s["rect"].collidepoint(mouse_pos):
                         squares.remove(s)
                         game_state["score"] += SCORE_INCREMENT
                         break
-
     return True
 
 
 def update_squares(squares: List[Square], game_state: Dict[str, Any]) -> None:
-    """
-    Update square positions, enforce size-based max speeds, handle fleeing, and handle collisions.
-    """
     if game_state["paused"]:
         return
 
-    diff_multiplier = game_state["difficulty"]
+    current_time: int = pygame.time.get_ticks()
+    diff_multiplier: float = game_state["difficulty"]
 
-    for square in squares:
-        # 1. Base Random Acceleration (Keeps the trajectory erratic/random)
-        accel_x = random.uniform(*ACCELERATION_RANGE) * diff_multiplier
-        accel_y = random.uniform(*ACCELERATION_RANGE) * diff_multiplier
+    # We use a copy of the list or iterate carefully when removing items
+    for square in squares[:]:
 
-        # 2. Calculate Fleeing Acceleration
-        flee_accel_x = 0.0
-        flee_accel_y = 0.0
+        # --- LIFE SPAN CHECK ---
+        if current_time - square["birth_time"] > square["life_span"]:
+            squares.remove(square)
+            squares.extend(create_squares(1))  # Rebirth
+            continue
 
-        # Calculate the true center of the current square
-        sq1_center_x = square["pos"][0] + (square["size"] / 2.0)
-        sq1_center_y = square["pos"][1] + (square["size"] / 2.0)
+        # 1. Acceleration
+        accel_x: float = random.uniform(*ACCELERATION_RANGE) * diff_multiplier
+        accel_y: float = random.uniform(*ACCELERATION_RANGE) * diff_multiplier
+
+        # 2. Fleeing
+        flee_accel_x: float = 0.0
+        flee_accel_y: float = 0.0
+        sq1_center_x: float = square["pos"][0] + (square["size"] / 2.0)
+        sq1_center_y: float = square["pos"][1] + (square["size"] / 2.0)
 
         for other in squares:
-            # Don't compare a square to itself, and only flee if the other is strictly larger
             if square is not other and other["size"] > square["size"]:
+                sq2_center_x: float = other["pos"][0] + (other["size"] / 2.0)
+                sq2_center_y: float = other["pos"][1] + (other["size"] / 2.0)
+                dx: float = sq1_center_x - sq2_center_x
+                dy: float = sq1_center_y - sq2_center_y
+                distance: float = math.hypot(dx, dy)
 
-                # Calculate the true center of the predator square
-                sq2_center_x = other["pos"][0] + (other["size"] / 2.0)
-                sq2_center_y = other["pos"][1] + (other["size"] / 2.0)
-
-                # Vector from predator center TO prey center (points away from predator)
-                dx = sq1_center_x - sq2_center_x
-                dy = sq1_center_y - sq2_center_y
-                distance = math.hypot(dx, dy)
-
-                # ZERO-DISTANCE PROTECTION
-                # If they are perfectly overlapping, force a tiny random offset
                 if distance == 0:
-                    dx = random.uniform(-0.1, 0.1)
-                    dy = random.uniform(-0.1, 0.1)
+                    dx, dy = random.uniform(-0.1, 0.1), random.uniform(-0.1, 0.1)
                     distance = math.hypot(dx, dy)
 
-                # Only flee if within the perception radius
                 if distance < FLEE_RADIUS:
-                    # Weight the force: Stronger when closer, weaker when near the edge of the radius
-                    repulsion_intensity = (FLEE_RADIUS - distance) / FLEE_RADIUS
+                    repulsion: float = (FLEE_RADIUS - distance) / FLEE_RADIUS
+                    flee_accel_x += (dx / distance) * FLEE_FORCE * repulsion
+                    flee_accel_y += (dy / distance) * FLEE_FORCE * repulsion
 
-                    # Normalize the vector (divide by distance) and scale by force and intensity
-                    flee_accel_x += (dx / distance) * FLEE_FORCE * repulsion_intensity
-                    flee_accel_y += (dy / distance) * FLEE_FORCE * repulsion_intensity
-
-        # 3. Apply Total Acceleration (Randomness + Fleeing) to Velocity
         square["vel"][0] += accel_x + flee_accel_x
         square["vel"][1] += accel_y + flee_accel_y
-
-        # 4. Apply friction
         square["vel"][0] *= FRICTION
         square["vel"][1] *= FRICTION
 
-        # 5. CAP MAX SPEED BASED ON SIZE
-        max_speed = (SPEED_BASE_CONSTANT / square["size"]) * diff_multiplier
-        current_speed = math.hypot(square["vel"][0], square["vel"][1])
-
+        max_speed: float = (SPEED_BASE_CONSTANT / square["size"]) * diff_multiplier
+        current_speed: float = math.hypot(square["vel"][0], square["vel"][1])
         if current_speed > max_speed:
-            # Scale velocity vector down to max_speed
-            scale = max_speed / current_speed
+            scale: float = max_speed / current_speed
             square["vel"][0] *= scale
             square["vel"][1] *= scale
 
-        # 6. Move square using float positions for accuracy
         square["pos"][0] += square["vel"][0]
         square["pos"][1] += square["vel"][1]
+        square["rect"].x, square["rect"].y = int(square["pos"][0]), int(
+            square["pos"][1]
+        )
 
-        # Sync rect to float position
-        square["rect"].x = int(square["pos"][0])
-        square["rect"].y = int(square["pos"][1])
-
-        # 7. Bounce off walls
+        # Wall Bounce
         if square["rect"].left <= 0:
             square["rect"].left = 0
-            bounce_off_wall(square, "x", -1)
+            bounce_off_wall(square, "x")
         elif square["rect"].right >= WIDTH:
             square["rect"].right = WIDTH
-            bounce_off_wall(square, "x", 1)
-
+            bounce_off_wall(square, "x")
         if square["rect"].top <= 0:
             square["rect"].top = 0
-            bounce_off_wall(square, "y", -1)
+            bounce_off_wall(square, "y")
         elif square["rect"].bottom >= HEIGHT:
             square["rect"].bottom = HEIGHT
-            bounce_off_wall(square, "y", 1)
+            bounce_off_wall(square, "y")
 
-    # 8. Collision detection between squares
+    # Collisions
     for i in range(len(squares)):
         for j in range(i + 1, len(squares)):
             if squares[i]["rect"].colliderect(squares[j]["rect"]):
-                # Simple elastic collision: swap velocities
                 squares[i]["vel"], squares[j]["vel"] = (
                     squares[j]["vel"],
                     squares[i]["vel"],
                 )
-
-                # Push apart slightly to prevent getting stuck
-                squares[i]["pos"][0] += squares[i]["vel"][0]
-                squares[i]["pos"][1] += squares[i]["vel"][1]
 
 
 # ============================================================================
@@ -298,9 +243,6 @@ def render_text_overlays(
     font: pygame.font.Font,
     clock: pygame.time.Clock,
 ) -> None:
-    """
-    Render all text overlays.
-    """
     fps_text = font.render(f"FPS: {int(clock.get_fps())}", True, TEXT_COLOR)
     count_text = font.render(
         f"Squares: {len(squares)} (Press SPACE to add)", True, TEXT_COLOR
@@ -308,10 +250,8 @@ def render_text_overlays(
     score_text = font.render(
         f"Score: {game_state['score']} (Click squares)", True, TEXT_COLOR
     )
-
     elapsed_seconds = (pygame.time.get_ticks() - game_state["start_time"]) // 1000
     timer_text = font.render(f"Timer: {elapsed_seconds}s", True, TEXT_COLOR)
-
     diff_text = font.render(
         f"Difficulty [1,2,3]: {game_state['difficulty']}x", True, TEXT_COLOR
     )
@@ -342,48 +282,35 @@ def render(
     clock: pygame.time.Clock,
     bg_image: Optional[pygame.Surface] = None,
 ) -> None:
-    """
-    Render all squares, backgrounds, and text overlays.
-    """
     if bg_image:
         screen.blit(bg_image, (0, 0))
     else:
         screen.fill(BG_COLOR)
-
     for square in squares:
         pygame.draw.rect(screen, square["color"], square["rect"])
         pygame.draw.rect(
             screen, SQUARE_OUTLINE_COLOR, square["rect"], SQUARE_OUTLINE_WIDTH
         )
-
     render_text_overlays(screen, squares, game_state, font, clock)
     pygame.display.flip()
 
 
 # ============================================================================
-# MAIN GAME LOOP
+# MAIN
 # ============================================================================
 
 
 def main() -> None:
-    """
-    Main game loop orchestration.
-    """
-    screen, clock = init_pygame(fullscreen=False)
+    screen, clock = init_pygame()
     font = pygame.font.SysFont(None, FONT_SIZE)
-
-    # Create a procedural background surface
     bg_surface = pygame.Surface((WIDTH, HEIGHT))
     bg_surface.fill(BG_BASE_COLOR)
-
-    # Draw background grid using GRID_SIZE
     for x in range(0, WIDTH, GRID_SIZE):
         pygame.draw.line(bg_surface, BG_GRID_COLOR, (x, 0), (x, HEIGHT))
     for y in range(0, HEIGHT, GRID_SIZE):
         pygame.draw.line(bg_surface, BG_GRID_COLOR, (0, y), (WIDTH, y))
 
     squares = create_squares(NUM_SQUARES)
-
     game_state = {
         "paused": False,
         "score": 0,
@@ -397,7 +324,6 @@ def main() -> None:
         update_squares(squares, game_state)
         render(screen, squares, game_state, font, clock, bg_image=bg_surface)
         clock.tick(FPS)
-
     pygame.quit()
 
 
