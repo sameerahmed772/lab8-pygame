@@ -294,3 +294,109 @@ Suggest me what to do, do not channge my code and make sure to read #file:copilo
 - **Socratic Mode**: ON
 - **Changes Made**: No code edits; prepared two paste-ready text blocks with professional docstrings/type hints and a README template.
 - **Context and Reasons for Changes**: User requested documentation deliverables only, with no logic or code rewrites.
+### **New Interaction**
+- **Agent Version**: 2.3
+- **Date**: 23-04-2026 10:20
+- **User**: redowan-ahmed.sameer@epita.fr
+- **Prompt**: How do I calculate the angle between two moving objects in Pygame?
+- **CoPilot Mode**: Ask
+- **CoPilot Model**: GPT-5.3-Codex
+- **Socratic Mode**: ON
+- **Changes Made**: No code changes; provided Socratic guidance for computing angle between moving objects in Pygame.
+- **Context and Reasons for Changes**: User requested conceptual help, so response focuses on vector-based angle reasoning and practical implementation hints.
+
+### **New Interaction**
+- **Agent Version**: 2.3
+- **Date**: 23-04-2026 10:25
+- **User**: redowan-ahmed.sameer@epita.fr
+- **Prompt**: What is the formula for a steering behavior that follows a target?
+- **CoPilot Mode**: Ask
+- **CoPilot Model**: GPT-5.3-Codex
+- **Socratic Mode**: ON
+- **Changes Made**: No code changes; explained target-follow steering behavior formula (seek/arrive) conceptually.
+- **Context and Reasons for Changes**: User asked for the formula, so response focuses on vector equations and practical interpretation.
+
+### **New Interaction**
+- **Agent Version**: 2.3
+- **Date**: 23-04-2026 10:29
+- **User**: redowan-ahmed.sameer@epita.fr
+- **Prompt**: How can I implement a timer in Pygame that doesn't stop when the game is paused?
+- **CoPilot Mode**: Ask
+- **CoPilot Model**: GPT-5.3-Codex
+- **Socratic Mode**: ON
+- **Changes Made**: No code changes; provided guidance for a real-time timer that continues while paused.
+- **Context and Reasons for Changes**: User requested timer behavior guidance, so response focuses on separating real-time tracking from pause-gated simulation updates.
+
+### **New Interaction**
+- **Agent Version**: 2.3
+- **Date**: 23-04-2026 10:33
+- **User**: redowan-ahmed.sameer@epita.fr
+- **Prompt**: I'm planning to implement a Chase feature using vector subtraction. If I calculate the distance between a large square and a small one, and then add a fraction of that normalized vector to the large square's acceleration, will that create a natural-looking pursuit? How should I balance the FLEE_FORCE vs. a new CHASE_FORCE so the game doesn't become too chaotic?
+- **CoPilot Mode**: Ask
+- **CoPilot Model**: GPT-5.3-Codex
+- **Socratic Mode**: ON
+- **Changes Made**: No code changes; provided Socratic guidance on chase vector design and FLEE_FORCE/CHASE_FORCE balancing.
+- **Context and Reasons for Changes**: User requested planning and parameter tuning advice for natural pursuit behavior.
+
+### **New Interaction**
+- **Agent Version**: 2.3
+- **Date**: 23-04-2026 10:47
+- **User**: redowan-ahmed.sameer@epita.fr
+- **Prompt**: I have now implemented the chase system using vector subtraction to guide predators toward smaller prey. I've also integrated the lifespan and rebirth mechanics to keep the simulation dynamic. Please review my update_squares logic for any physics inconsistencies and update the journal to reflect these recent interactions
+- **CoPilot Mode**: Ask
+- **CoPilot Model**: GPT-5.3-Codex
+- **Socratic Mode**: ON
+- **Changes Made**: No code changes; performed physics-focused review of update_squares logic and reported inconsistencies/risks.
+- **Context and Reasons for Changes**: User requested a review of chase/flee plus lifespan-rebirth behavior and requested journal update.
+
+### **New Interaction**
+- **Agent Version**: 2.3
+- **Date**: 23-04-2026 10:51
+- **User**: redowan-ahmed.sameer@epita.fr
+- **Prompt**: I have finished the Chase, Flee, and Lifespan features for Labs 11. Can you help me update my README.md to document these new mechanics? I need it to explain the predator-prey hierarchy and the rebirth system. Also, please review my main.py for any unused variables or redundant logic to ensure the code is clean and professional for my submission.
+- **CoPilot Mode**: Edit
+- **CoPilot Model**: GPT-5.3-Codex
+- **Socratic Mode**: ON
+- **Changes Made**: Updated README.md for Lab 11 mechanics (predator-prey hierarchy, chase/flee force model, and lifespan-rebirth flow) and cleaned main.py by removing an unused import and simplifying mouse click event logic.
+- **Context and Reasons for Changes**: User requested submission-ready documentation plus cleanup review for unused or redundant logic.
+
+### **New Interaction**
+- **Agent Version**: 2.3
+- **Date**: 23-04-2026 10:56
+- **User**: redowan-ahmed.sameer@epita.fr
+- **Prompt**: Generate the code explorer site for this project
+- **CoPilot Mode**: Edit
+- **CoPilot Model**: GPT-5.3-Codex
+- **Socratic Mode**: ON
+- **Changes Made**: Generated an updated code explorer dashboard in code-explorer.html using project source, docs, and tests.
+- **Context and Reasons for Changes**: User requested a full code explorer site for the current project to document architecture, mechanics, and quality insights.
+
+### **New Interaction**
+- **Agent Version**: 2.3
+- **Date**: 23-04-2026 11:05
+- **User**: redowan-ahmed.sameer@epita.fr
+- **Prompt**: Generate a complete code explorer HTML site for the workspace at /Users/yuun/Documents/AI4SE/lab8-pygame.
+
+Requirements:
+- Write or overwrite code-explorer.html in the project root.
+- Base the content on the current codebase, especially main.py, README.md, test_main.py, and REPORT.md if present.
+- The page should be a single self-contained HTML file with modern styling and clear sections for:
+	1) Project overview
+	2) Architecture and control flow
+	3) Mechanics explained (chase, flee, lifespan/rebirth, collisions, input controls)
+	4) Key constants and their effect on behavior
+	5) Potential risks/physics caveats and suggested improvements
+	6) Testing strategy and notable test coverage
+- Include at least one Mermaid diagram for update loop/control flow.
+- Include concise, student-friendly explanations and practical tuning tips.
+- Ensure the generated file is valid and readable on desktop and mobile.
+
+After creating/updating the file, report:
+- Which files were analyzed
+- What was generated
+- Any assumptions made.
+- **CoPilot Mode**: Agent
+- **CoPilot Model**: GPT-5.3-Codex
+- **Socratic Mode**: ON
+- **Changes Made**: Generated code-explorer.html in repo root as a self-contained code explorer site with responsive layout, multiple Mermaid diagrams, mechanics and constants explanations, risk analysis, testing strategy summary, type-hint score, performance notes, and code review findings.
+- **Context and Reasons for Changes**: User requested a full explorer page based on current project files with clear educational sections and at least one control-flow Mermaid diagram.

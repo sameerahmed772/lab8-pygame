@@ -1,7 +1,7 @@
 import pygame
 import random
 import math
-from typing import List, Dict, Tuple, Optional, Any, TypedDict
+from typing import List, Dict, Tuple, Optional, TypedDict
 
 # ============================================================================
 # CONSTANTS
@@ -26,9 +26,11 @@ FRICTION: float = 0.995
 ACCELERATION_RANGE: Tuple[float, float] = (-0.1, 0.1)
 DEFAULT_COLOR_RANGE: Tuple[int, int] = (50, 255)
 
-# Fleeing Constants
+# AI Behavior Constants
 FLEE_RADIUS: float = 150.0
 FLEE_FORCE: float = 0.8
+CHASE_RADIUS: float = 200.0
+CHASE_FORCE: float = 0.5
 
 # Rendering constants
 BG_COLOR: Tuple[int, int, int] = (30, 30, 30)
@@ -75,16 +77,6 @@ class GameState(TypedDict):
 
 
 def bounce_off_wall(square: Square, axis: str) -> None:
-    """Invert square velocity on a wall collision axis and sync float position.
-
-    This helper keeps the float-based position (pos) aligned with the integer
-    pygame.Rect coordinates after a wall clamp, then reverses velocity on the
-    selected axis.
-
-    Args:
-        square: Mutable square record containing rect, pos, and vel fields.
-        axis: Collision axis. Expected values are "x" or "y".
-    """
     if axis == "x":
         square["pos"][0] = float(square["rect"].x)
         square["vel"][0] *= -1
@@ -99,36 +91,18 @@ def bounce_off_wall(square: Square, axis: str) -> None:
 
 
 def init_pygame(fullscreen: bool = False) -> Tuple[pygame.Surface, pygame.time.Clock]:
-    """Initialize pygame modules and create the main display and clock.
-
-    Args:
-        fullscreen: If True, creates a fullscreen window; otherwise windowed mode.
-
-    Returns:
-        A tuple of (screen, clock).
-    """
     pygame.init()
     pygame.font.init()
     flags = pygame.FULLSCREEN if fullscreen else 0
     screen = pygame.display.set_mode((WIDTH, HEIGHT), flags)
-    pygame.display.set_caption("Lab 8: Life Span & Rebirth")
+    pygame.display.set_caption("Lab 11: Chase, Flee, & Lifespan")
     clock = pygame.time.Clock()
     return screen, clock
 
 
 def create_squares(
-    num_squares: int,
-    color_range: Tuple[int, int] = DEFAULT_COLOR_RANGE,
+    num_squares: int, color_range: Tuple[int, int] = DEFAULT_COLOR_RANGE
 ) -> List[Square]:
-    """Create square entities with randomized visuals, motion, and lifespan.
-
-    Args:
-        num_squares: Number of squares to generate.
-        color_range: Inclusive min and max values for each RGB channel.
-
-    Returns:
-        A list of square dictionaries ready for simulation and rendering.
-    """
     squares: List[Square] = []
     now: int = pygame.time.get_ticks()
 
@@ -170,15 +144,6 @@ def create_squares(
 
 
 def handle_events(squares: List[Square], game_state: GameState) -> bool:
-    """Process user input and update game state and square collection.
-
-    Args:
-        squares: Mutable list of active squares.
-        game_state: Mutable game state dictionary.
-
-    Returns:
-        True to continue running, or False to terminate the main loop.
-    """
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             return False
@@ -193,23 +158,16 @@ def handle_events(squares: List[Square], game_state: GameState) -> bool:
                 game_state["difficulty"] = DIFFICULTY_LEVELS[2]
             elif event.key in (pygame.K_3, pygame.K_KP3):
                 game_state["difficulty"] = DIFFICULTY_LEVELS[3]
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
-                for s in reversed(squares):
-                    if s["rect"].collidepoint(event.pos):
-                        squares.remove(s)
-                        game_state["score"] += SCORE_INCREMENT
-                        break
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            for s in reversed(squares):
+                if s["rect"].collidepoint(event.pos):
+                    squares.remove(s)
+                    game_state["score"] += SCORE_INCREMENT
+                    break
     return True
 
 
 def update_squares(squares: List[Square], game_state: GameState) -> None:
-    """Advance simulation for all squares for one frame.
-
-    Args:
-        squares: Mutable list of active squares.
-        game_state: Mutable game state dictionary.
-    """
     if game_state["paused"]:
         return
 
@@ -217,44 +175,59 @@ def update_squares(squares: List[Square], game_state: GameState) -> None:
     diff = game_state["difficulty"]
 
     for square in squares[:]:
-        # Life Span Rebirth
+        # 1. Lifespan Logic
         if now - square["birth_time"] > square["life_span"]:
             squares.remove(square)
             squares.extend(create_squares(1))
             continue
 
-        # Acceleration and Fleeing
+        # Start with random jitter
         ax = random.uniform(*ACCELERATION_RANGE) * diff
         ay = random.uniform(*ACCELERATION_RANGE) * diff
+
         cx, cy = (
             square["pos"][0] + square["size"] / 2,
             square["pos"][1] + square["size"] / 2,
         )
 
+        # 2. Chase & Flee Logic
         for other in squares:
-            if square is not other and other["size"] > square["size"]:
-                ox, oy = (
-                    other["pos"][0] + other["size"] / 2,
-                    other["pos"][1] + other["size"] / 2,
-                )
-                dx, dy = cx - ox, cy - oy
-                dist = math.hypot(dx, dy) or 0.1
+            if square is other:
+                continue
+
+            ox, oy = (
+                other["pos"][0] + other["size"] / 2,
+                other["pos"][1] + other["size"] / 2,
+            )
+            dx, dy = ox - cx, oy - cy
+            dist = math.hypot(dx, dy) or 0.1
+
+            # Fleeing (Current square is smaller)
+            if square["size"] < other["size"]:
                 if dist < FLEE_RADIUS:
                     force = ((FLEE_RADIUS - dist) / FLEE_RADIUS) * FLEE_FORCE
+                    ax -= (dx / dist) * force
+                    ay -= (dy / dist) * force
+
+            # Chasing (Current square is larger)
+            elif square["size"] > other["size"]:
+                if dist < CHASE_RADIUS:
+                    force = ((CHASE_RADIUS - dist) / CHASE_RADIUS) * CHASE_FORCE
                     ax += (dx / dist) * force
                     ay += (dy / dist) * force
 
+        # Update Velocity
         square["vel"][0] = (square["vel"][0] + ax) * FRICTION
         square["vel"][1] = (square["vel"][1] + ay) * FRICTION
 
-        # Max Speed Limit
+        # Speed Limit
         limit = (SPEED_BASE_CONSTANT / square["size"]) * diff
         curr_v = math.hypot(square["vel"][0], square["vel"][1])
         if curr_v > limit:
             square["vel"][0] *= limit / curr_v
             square["vel"][1] *= limit / curr_v
 
-        # Move
+        # Update Position
         square["pos"][0] += square["vel"][0]
         square["pos"][1] += square["vel"][1]
         square["rect"].topleft = (int(square["pos"][0]), int(square["pos"][1]))
@@ -287,7 +260,6 @@ def render_text_overlays(
     font: pygame.font.Font,
     clock: pygame.time.Clock,
 ) -> None:
-    """Render HUD text and pause indicator."""
     fps_text = font.render(f"FPS: {int(clock.get_fps())}", True, TEXT_COLOR)
     count_text = font.render(f"Squares: {len(squares)}", True, TEXT_COLOR)
     score_text = font.render(f"Score: {game_state['score']}", True, TEXT_COLOR)
@@ -323,7 +295,6 @@ def render(
     clock: pygame.time.Clock,
     bg_image: Optional[pygame.Surface] = None,
 ) -> None:
-    """Render one complete frame and present it to the display."""
     if bg_image:
         screen.blit(bg_image, (0, 0))
     else:
@@ -343,11 +314,9 @@ def render(
 
 
 def main() -> None:
-    """Run the game lifecycle from initialization to shutdown."""
     screen, clock = init_pygame()
     font = pygame.font.SysFont(None, FONT_SIZE)
 
-    # Pre-render grid
     bg = pygame.Surface((WIDTH, HEIGHT))
     bg.fill(BG_BASE_COLOR)
     for x in range(0, WIDTH, GRID_SIZE):
