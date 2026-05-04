@@ -59,7 +59,8 @@ class Boid:
     # Screen wrapping: if a boid goes off one edge of the screen, 
     # it should reappear on the opposite edge
     def _screen_wrap(self) -> None:
-        pass
+        self.x %= config.WIDTH
+        self.y %= config.HEIGHT
     
     # Default wall behavior is bounce: if a boid hits the edge of the screen, 
     # it should bounce back in the opposite direction
