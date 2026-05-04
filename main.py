@@ -240,7 +240,6 @@ def main():
         pygame.draw.line(bg, BG_GRID, (0, y), (WIDTH, y))
 
     squares: List[Square] = []
-    # Exercise 1: A Mix of Squares
     for _ in range(5):
         squares.append(create_single_square(25))
     for _ in range(10):
