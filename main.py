@@ -76,8 +76,8 @@ def create_single_square(fixed_size: Optional[int] = None) -> Square:
     Separation of concerns: main logic doesn't need to know how to build a square.
     """
     size = fixed_size if fixed_size is not None else random.randint(*SIZE_RANGE)
-    x = random.randint(0, WIDTH - size)
-    y = random.randint(0, HEIGHT - size)
+    x = random.randint(0, max(0, WIDTH - size))
+    y = random.randint(0, max(0, HEIGHT - size))
 
     # Speed logic: Smaller squares move faster (inversely proportional)
     max_v = BASE_SPEED_FACTOR / size
@@ -202,9 +202,19 @@ def update_simulation(squares: List[Square], state: GameState):
                 if squares[i]["size"] > squares[j]["size"]:
                     if squares[j] not in dead_squares:
                         dead_squares.append(squares[j])
+                        # Exercise 6: Big square eats small square and gets bigger
+                        growth = max(1, squares[j]["size"] // 5)
+                        squares[i]["size"] += growth
+                        squares[i]["rect"].width = squares[i]["size"]
+                        squares[i]["rect"].height = squares[i]["size"]
                 elif squares[j]["size"] > squares[i]["size"]:
                     if squares[i] not in dead_squares:
                         dead_squares.append(squares[i])
+                        # Exercise 6: Big square eats small square and gets bigger
+                        growth = max(1, squares[i]["size"] // 5)
+                        squares[j]["size"] += growth
+                        squares[j]["rect"].width = squares[j]["size"]
+                        squares[j]["rect"].height = squares[j]["size"]
                 else:
                     # Bounce squares of equal size
                     squares[i]["vel"], squares[j]["vel"] = (
