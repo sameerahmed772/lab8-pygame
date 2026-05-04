@@ -38,7 +38,8 @@ PAUSE_COLOR = (255, 50, 50)
 DIFFICULTY_MODS = {pygame.K_1: 1.0, pygame.K_2: 1.5, pygame.K_3: 2.0}
 SCORE_VAL = 100
 TRAILS_LENGTH = 10
-TEST_MODE_ON = True  # Exercise 8:Speed test
+GROWTH_SPEED = 500
+TEST_MODE_ON = False  # Exercise 8:Speed test
 
 # ============================================================================
 # DATA MODELS
@@ -73,14 +74,18 @@ class GameState(TypedDict):
 # ============================================================================
 
 
-def create_single_square(fixed_size: Optional[int] = None) -> Square:
+def create_single_square(fixed_size: Optional[float] = None) -> Square:
     """
     Factory function: Encapsulates the logic of creating one object.
     Separation of concerns: main logic doesn't need to know how to build a square.
     """
-    size = fixed_size if fixed_size is not None else random.randint(*SIZE_RANGE)
-    x = random.randint(0, max(0, WIDTH - size))
-    y = random.randint(0, max(0, HEIGHT - size))
+    size = (
+        float(fixed_size)
+        if fixed_size is not None
+        else float(random.randint(*SIZE_RANGE))
+    )
+    x = random.randint(0, int(max(0, WIDTH - size)))
+    y = random.randint(0, int(max(0, HEIGHT - size)))
 
     # Speed logic: Smaller squares move faster (inversely proportional)
     max_v = BASE_SPEED_FACTOR / size
@@ -88,7 +93,7 @@ def create_single_square(fixed_size: Optional[int] = None) -> Square:
     speed = random.uniform(max_v * 0.5, max_v)
 
     return {
-        "rect": pygame.Rect(x, y, size, size),
+        "rect": pygame.Rect(x, y, int(size), int(size)),
         "pos": [float(x), float(y)],
         "color": (
             random.randint(*COLOR_MIN_MAX),
@@ -100,6 +105,9 @@ def create_single_square(fixed_size: Optional[int] = None) -> Square:
         "birth_time": pygame.time.get_ticks(),
         "life_span": random.randint(*LIFESPAN_RANGE),
         "history": [],
+        "target_size": size,
+        "start_size": size,
+        "growth_start_time": 0,
     }
 
 
@@ -173,6 +181,19 @@ def update_simulation(squares: List[Square], state: GameState):
             squares.append(create_single_square(fixed_size=sq["size"]))
             continue
 
+        # Exercise 9: Animated Growth
+        if sq["size"] < sq["target_size"]:
+            elapsed = now - sq["growth_start_time"]
+            if elapsed >= 500:
+                sq["size"] = sq["target_size"]
+            else:
+                sq["size"] = sq["start_size"] + (
+                    sq["target_size"] - sq["start_size"]
+                ) * (elapsed / 500.0)
+
+            sq["rect"].width = int(sq["size"])
+            sq["rect"].height = int(sq["size"])
+
         # 2. Physics & AI Steering
         ax = random.uniform(*JITTER_RANGE) * diff
         ay = random.uniform(*JITTER_RANGE) * diff
@@ -212,18 +233,18 @@ def update_simulation(squares: List[Square], state: GameState):
                     if squares[j] not in dead_squares:
                         dead_squares.append(squares[j])
                         # Exercise 6: Big square eats small square and gets bigger
-                        growth = max(1, squares[j]["size"] // 10)
-                        squares[i]["size"] += growth
-                        squares[i]["rect"].width = squares[i]["size"]
-                        squares[i]["rect"].height = squares[i]["size"]
+                        growth = max(1, int(squares[j]["size"]) // 10)
+                        squares[i]["start_size"] = squares[i]["size"]
+                        squares[i]["target_size"] += growth
+                        squares[i]["growth_start_time"] = now
                 elif squares[j]["size"] > squares[i]["size"]:
                     if squares[i] not in dead_squares:
                         dead_squares.append(squares[i])
                         # Exercise 6: Big square eats small square and gets bigger
-                        growth = max(1, squares[i]["size"] // 10)
-                        squares[j]["size"] += growth
-                        squares[j]["rect"].width = squares[j]["size"]
-                        squares[j]["rect"].height = squares[j]["size"]
+                        growth = max(1, int(squares[i]["size"]) // 10)
+                        squares[j]["start_size"] = squares[j]["size"]
+                        squares[j]["target_size"] += growth
+                        squares[j]["growth_start_time"] = now
                 else:
                     # Bounce squares of equal size
                     squares[i]["vel"], squares[j]["vel"] = (
@@ -291,13 +312,13 @@ def main():
     squares: List[Square] = []
     if TEST_MODE_ON:
         test_sq = create_single_square(25)
-        
+
         test_sq["pos"] = [float(WIDTH / 2), float(HEIGHT / 2)]
         test_sq["rect"].center = (WIDTH // 2, HEIGHT // 2)
-        
-        max_speed = (BASE_SPEED_FACTOR / 25) * 1.0 
+
+        max_speed = (BASE_SPEED_FACTOR / 25) * 1.0
         test_sq["vel"] = [max_speed, 0.0]
-        
+
         squares.append(test_sq)
         last_test_time = pygame.time.get_ticks()
         last_test_pos = list(test_sq["pos"])
@@ -345,11 +366,17 @@ def main():
             now = pygame.time.get_ticks()
             if now - last_test_time >= 1000:
                 current_pos = squares[0]["pos"]
-                dist = math.hypot(current_pos[0] - last_test_pos[0], current_pos[1] - last_test_pos[1])
-                # Calculate theoretical max distance 
-                max_speed_per_frame = (BASE_SPEED_FACTOR / squares[0]["size"]) * state["difficulty"]
+                dist = math.hypot(
+                    current_pos[0] - last_test_pos[0], current_pos[1] - last_test_pos[1]
+                )
+                # Calculate theoretical max distance
+                max_speed_per_frame = (BASE_SPEED_FACTOR / squares[0]["size"]) * state[
+                    "difficulty"
+                ]
                 max_dist_per_sec = max_speed_per_frame * FPS
-                print(f"[Speed Test] Real Distance (1s): {dist:.2f}px | Max Expected (1s): {max_dist_per_sec:.2f}px")
+                print(
+                    f"[Speed Test] Real Distance (1s): {dist:.2f}px | Max Expected (1s): {max_dist_per_sec:.2f}px"
+                )
                 last_test_time = now
                 last_test_pos = list(current_pos)
 
@@ -359,7 +386,7 @@ def main():
             if len(s["history"]) >= 2:
                 for i in range(len(s["history"]) - 1):
                     p1 = s["history"][i]
-                    p2 = s["history"][i+1]
+                    p2 = s["history"][i + 1]
                     # Prevent drawing a line across the screen when wrapping
                     if math.hypot(p1[0] - p2[0], p1[1] - p2[1]) < WIDTH / 2:
                         pygame.draw.line(screen, s["color"], p1, p2, OUTLINE_WIDTH)

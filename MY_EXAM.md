@@ -31,4 +31,7 @@ How I solved it:
 I added a distance check. Before I draw a line, I check the distance between the two points. If the distance is bigger than half the screen width, I know the square teleported, so I don't draw that line
 
 ##Exercise 8: Speed Test
-For the speed test, I am planning to add a TEST_MODE_ON variable that spawns just a single test square on an empty screen to prevent collisions. I will record it's starting position (which will be the center) and after 1 second I will check how much distance it travelled with math function to find the speed. Then I can compare the real distance travelled and if it actually moves at the correct speed
+For the speed test, I am planning to add a TEST_MODE_ON variable that spawns just a single test square on an empty screen to prevent collisions. I will record it's starting position (which will be the center of the screen) and after every 1 second I will check how much distance it travelled with math function to find its speed. Then I can compare the real distance travelled and if it actually moves at the correct speed. I noticed that the test square was moving on a random path so calculate the speed properly, I changed its path to a straight line so it is more accurate
+
+##Exercise 9: Animated Growth
+For the animated growth feature, I will give the squares a target_size when they eat something. Instead of snapping to their new size instantly, I will add logic to make the square grow smoothly over a 500 millisecond timer until it reaches that target
