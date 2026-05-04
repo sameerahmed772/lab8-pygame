@@ -145,6 +145,10 @@ def apply_steering(
     return ax, ay
 
 
+def check_collision(a: Square, b: Square) -> bool:
+    return a["rect"].colliderect(b["rect"])
+
+
 # ============================================================================
 # CORE GAME LOGIC
 # ============================================================================
@@ -190,14 +194,29 @@ def update_simulation(squares: List[Square], state: GameState):
 
         handle_wall_collision(sq)
 
-    # 4. Simple Elastic Collision (Swap velocities on hit)
+    # 4. Collision Detection & Eating
+    dead_squares = []
     for i in range(len(squares)):
         for j in range(i + 1, len(squares)):
-            if squares[i]["rect"].colliderect(squares[j]["rect"]):
-                squares[i]["vel"], squares[j]["vel"] = (
-                    squares[j]["vel"],
-                    squares[i]["vel"],
-                )
+            if check_collision(squares[i], squares[j]):
+                if squares[i]["size"] > squares[j]["size"]:
+                    if squares[j] not in dead_squares:
+                        dead_squares.append(squares[j])
+                elif squares[j]["size"] > squares[i]["size"]:
+                    if squares[i] not in dead_squares:
+                        dead_squares.append(squares[i])
+                else:
+                    # Bounce squares of equal size
+                    squares[i]["vel"], squares[j]["vel"] = (
+                        squares[j]["vel"],
+                        squares[i]["vel"],
+                    )
+
+    # Remove dead squares and respawn them
+    for dead in dead_squares:
+        if dead in squares:
+            squares.remove(dead)
+            squares.append(create_single_square(fixed_size=dead["size"]))
 
 
 # ============================================================================
