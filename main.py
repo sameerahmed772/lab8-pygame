@@ -151,7 +151,7 @@ def update_simulation(squares: List[Square], state: GameState):
         # 1. Lifespan check
         if now - sq["birth_time"] > sq["life_span"]:
             squares.remove(sq)
-            squares.append(create_single_square())
+            squares.append(create_single_square(fixed_size=sq["size"]))
             continue
 
         # 2. Physics & AI Steering
