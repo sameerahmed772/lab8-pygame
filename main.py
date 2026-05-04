@@ -8,7 +8,7 @@ from typing import List, Tuple, Optional, TypedDict
 # ============================================================================
 # Using named constants avoids "magic numbers," making the game rules
 # easy to find and modify in one place.
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 1000, 800
 FPS = 60
 
 # Square properties
@@ -37,6 +37,7 @@ PAUSE_COLOR = (255, 50, 50)
 # Gameplay
 DIFFICULTY_MODS = {pygame.K_1: 1.0, pygame.K_2: 1.5, pygame.K_3: 2.0}
 SCORE_VAL = 100
+TRAILS_LENGTH = 10
 
 # ============================================================================
 # DATA MODELS
@@ -56,6 +57,7 @@ class Square(TypedDict):
     size: int
     birth_time: int
     life_span: int
+    history: List[Tuple[int, int]]
 
 
 class GameState(TypedDict):
@@ -96,6 +98,7 @@ def create_single_square(fixed_size: Optional[int] = None) -> Square:
         "size": size,
         "birth_time": pygame.time.get_ticks(),
         "life_span": random.randint(*LIFESPAN_RANGE),
+        "history": [],
     }
 
 
@@ -194,6 +197,11 @@ def update_simulation(squares: List[Square], state: GameState):
 
         handle_wall_collision(sq)
 
+        # Record history for trails
+        sq["history"].append(sq["rect"].center)
+        if len(sq["history"]) > TRAILS_LENGTH:
+            sq["history"].pop(0)
+
     # 4. Collision Detection & Eating
     dead_squares = []
     for i in range(len(squares)):
@@ -203,7 +211,7 @@ def update_simulation(squares: List[Square], state: GameState):
                     if squares[j] not in dead_squares:
                         dead_squares.append(squares[j])
                         # Exercise 6: Big square eats small square and gets bigger
-                        growth = max(1, squares[j]["size"] // 5)
+                        growth = max(1, squares[j]["size"] // 10)
                         squares[i]["size"] += growth
                         squares[i]["rect"].width = squares[i]["size"]
                         squares[i]["rect"].height = squares[i]["size"]
@@ -211,7 +219,7 @@ def update_simulation(squares: List[Square], state: GameState):
                     if squares[i] not in dead_squares:
                         dead_squares.append(squares[i])
                         # Exercise 6: Big square eats small square and gets bigger
-                        growth = max(1, squares[i]["size"] // 5)
+                        growth = max(1, squares[i]["size"] // 10)
                         squares[j]["size"] += growth
                         squares[j]["rect"].width = squares[j]["size"]
                         squares[j]["rect"].height = squares[j]["size"]
@@ -320,6 +328,15 @@ def main():
 
         screen.blit(bg, (0, 0))
         for s in squares:
+            # Draw Trail
+            if len(s["history"]) >= 2:
+                for i in range(len(s["history"]) - 1):
+                    p1 = s["history"][i]
+                    p2 = s["history"][i+1]
+                    # Prevent drawing a line across the screen when wrapping
+                    if math.hypot(p1[0] - p2[0], p1[1] - p2[1]) < WIDTH / 2:
+                        pygame.draw.line(screen, s["color"], p1, p2, OUTLINE_WIDTH)
+
             pygame.draw.rect(screen, s["color"], s["rect"])
             pygame.draw.rect(screen, UI_COLOR, s["rect"], OUTLINE_WIDTH)
 
