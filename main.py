@@ -100,13 +100,24 @@ def create_single_square(fixed_size: Optional[int] = None) -> Square:
 
 
 def handle_wall_collision(square: Square):
-    """Resets position to boundary and reverses velocity to prevent sticking."""
-    if square["rect"].left <= 0 or square["rect"].right >= WIDTH:
-        square["pos"][0] = float(square["rect"].x)
-        square["vel"][0] *= -1
-    if square["rect"].top <= 0 or square["rect"].bottom >= HEIGHT:
-        square["pos"][1] = float(square["rect"].y)
-        square["vel"][1] *= -1
+    """Wraps the square around the screen when it goes out of bounds."""
+    wrapped = False
+    if square["rect"].right < 0:
+        square["pos"][0] = float(WIDTH)
+        wrapped = True
+    elif square["rect"].left > WIDTH:
+        square["pos"][0] = -float(square["size"])
+        wrapped = True
+
+    if square["rect"].bottom < 0:
+        square["pos"][1] = float(HEIGHT)
+        wrapped = True
+    elif square["rect"].top > HEIGHT:
+        square["pos"][1] = -float(square["size"])
+        wrapped = True
+
+    if wrapped:
+        square["rect"].topleft = (int(square["pos"][0]), int(square["pos"][1]))
 
 
 def apply_steering(
