@@ -18,29 +18,28 @@ class Config:
     # Use the *_STEER_STRENGTH parameters when applying the steering forces in the update() method.
     # You may have to adjust these parameters to get good results, but they should be a good starting point for tuning the behaviors.
 
-    # Separation is the behavior where boids steer away from nearby boids to avoid crowding
+    # Separation
     SEPARATION_ON: bool = False  # Toggle separation behavior on/off
-    SEPARATION_DISTANCE: int = BOID_SIZE * 15  # Minimum distance to maintain from other boids
-    SEPARATION_STEER_STRENGTH: float = 5 # How strongly boids steer away from neighbors (vector-based)
+    SEPARATION_DISTANCE: int = BOID_SIZE * 15
+    SEPARATION_STEER_STRENGTH: float = 5
 
-    # Alignment is the behavior where boids steer toward the average direction of nearby boids
+    # Alignment
     ALIGNEMENT_ON: bool = False  # Toggle alignment behavior on/off
-    ALIGNMENT_DISTANCE: int = BOID_SIZE * 100  # Distance within which to consider neighbors for alignment
-    ALIGNEMENT_STEER_STRENGTH: float = .8  # How strongly boids steer toward average direction of neighbors (vector-based)
+    ALIGNMENT_DISTANCE: int = BOID_SIZE * 100
+    ALIGNEMENT_STEER_STRENGTH: float = 0.8
 
-    # Cohesion is the behavior where boids steer toward the average position of nearby boids
+    # Cohesion
     COHESION_ON: bool = False  # Toggle cohesion behavior on/off
-    COHESION_DISTANCE: int = BOID_SIZE * 50  # Distance within which to consider neighbors for cohesion
-    COHESION_STEER_STRENGTH: float = 5  # How strongly boids steer toward center of mass of neighbors (vector-based)
+    COHESION_DISTANCE: int = BOID_SIZE * 50
+    COHESION_STEER_STRENGTH: float = 5
 
     # Wall warp or bounce
     WALL_BEHAVIOR: str = "bounce"  # "wrap" or "bounce"
 
 
-
 config = Config()
 
-# Main Boid class representing each boid in the simulation
+
 class Boid:
     def __init__(self) -> None:
         self.x: float = random.randint(0, config.WIDTH)
@@ -50,19 +49,18 @@ class Boid:
         self.vx: float = self.speed * math.cos(angle)
         self.vy: float = self.speed * math.sin(angle)
 
-
     # TODO: Implement speed clamping to ensure boids don't exceed max speed
     def _clampSpeed(self) -> None:
         pass
 
     # TODO: Implement Screen Wrapping
-    # Screen wrapping: if a boid goes off one edge of the screen, 
+    # Screen wrapping: if a boid goes off one edge of the screen,
     # it should reappear on the opposite edge
     def _screen_wrap(self) -> None:
         self.x %= config.WIDTH
         self.y %= config.HEIGHT
-    
-    # Default wall behavior is bounce: if a boid hits the edge of the screen, 
+
+    # Default wall behavior is bounce: if a boid hits the edge of the screen,
     # it should bounce back in the opposite direction
     def _screen_bounce(self) -> None:
         if self.x < config.BOID_SIZE or self.x > config.WIDTH - config.BOID_SIZE:
@@ -70,31 +68,32 @@ class Boid:
             self.x = max(config.BOID_SIZE, min(self.x, config.WIDTH - config.BOID_SIZE))
         if self.y < config.BOID_SIZE or self.y > config.HEIGHT - config.BOID_SIZE:
             self.vy = -self.vy
-            self.y = max(config.BOID_SIZE, min(self.y, config.HEIGHT - config.BOID_SIZE))
+            self.y = max(
+                config.BOID_SIZE, min(self.y, config.HEIGHT - config.BOID_SIZE)
+            )
 
     # TODO: Implement Random Steering of the velocity vector to create more natural movement
     def _random_steer(self, spread: float = 0.2) -> None:
         # Calculate current speed and angle
         speed: float = math.hypot(self.vx, self.vy)
         angle: float = math.atan2(self.vy, self.vx)
-        
+
         # Randomly steer a bit to create more natural movement
         new_angle: float = angle + random.uniform(-spread, spread)
-        
+
         # Update velocity vector based on new angle and same speed
         self.vx = speed * math.cos(new_angle)
         self.vy = speed * math.sin(new_angle)
 
-
     # TODO: Implement the three main boid behaviors: separation, alignment, and cohesion
 
-    # Separation: steer away from nearby boids to avoid crowding: 
+    # Separation: steer away from nearby boids to avoid crowding:
     # _separation returns a vector pointing away from nearby boids
-    # Explanation: For each nearby boid, calculate a vector pointing away from it, 
-    # inversely proportional to the distance. 
+    # Explanation: For each nearby boid, calculate a vector pointing away from it,
+    # inversely proportional to the distance.
     # Then sum these vectors to get the overall separation steering force.
-    def _separation(self, boids: List['Boid']) -> pygame.Vector2:
-        steer : pygame.Vector2 = pygame.Vector2(0, 0)
+    def _separation(self, boids: List["Boid"]) -> pygame.Vector2:
+        steer: pygame.Vector2 = pygame.Vector2(0, 0)
         for other in boids:
             if other is not self:
                 dx = self.x - other.x
@@ -105,13 +104,13 @@ class Boid:
                     steer.y += dy / dist
         return steer
 
-    # Alignment: steer toward the average direction of nearby boids: 
+    # Alignment: steer toward the average direction of nearby boids:
     # _alignment returns a vector pointing in the average direction of nearby boids
-    # Explanation: For each nearby boid, get its velocity vector and sum them up. 
-    # Then divide by the number of nearby boids to get the average velocity, 
+    # Explanation: For each nearby boid, get its velocity vector and sum them up.
+    # Then divide by the number of nearby boids to get the average velocity,
     # and subtract the current boid's velocity to get the alignment steering force.
-    def _alignment(self, boids: List['Boid']) -> pygame.Vector2:
-        steer : pygame.Vector2 = pygame.Vector2(0, 0)
+    def _alignment(self, boids: List["Boid"]) -> pygame.Vector2:
+        steer: pygame.Vector2 = pygame.Vector2(0, 0)
         avg_vx: float = 0.0
         avg_vy: float = 0.0
         count: int = 0
@@ -126,28 +125,40 @@ class Boid:
             steer.x = (avg_vx / count) - self.vx
             steer.y = (avg_vy / count) - self.vy
         return steer
-    
-    # Cohesion: steer toward the average position of nearby boids: 
+
+    # Cohesion: steer toward the average position of nearby boids:
     # _cohesion returns a vector pointing toward the average position of nearby boids
-    # Explanation: For each nearby boid, get its position and sum them up. 
-    # Then divide by the number of nearby boids to get the average position, 
+    # Explanation: For each nearby boid, get its position and sum them up.
+    # Then divide by the number of nearby boids to get the average position,
     # and subtract the current boid's position to get the cohesion steering force.
-    def _cohesion(self, boids: List['Boid']) -> pygame.Vector2:
-        steer : pygame.Vector2 = pygame.Vector2(0, 0)
+    def _cohesion(self, boids: List["Boid"]) -> pygame.Vector2:
+        steer: pygame.Vector2 = pygame.Vector2(0, 0)
+        avg_x: float = 0.0
+        avg_y: float = 0.0
+        count: int = 0
+        for other in boids:
+            if other is not self:
+                dist = math.hypot(self.x - other.x, self.y - other.y)
+                if 0 < dist < config.COHESION_DISTANCE:
+                    avg_x += other.x
+                    avg_y += other.y
+                    count += 1
+        if count > 0:
+            steer.x = (avg_x / count) - self.x
+            steer.y = (avg_y / count) - self.y
         return steer
-        
 
     # TODO: Use _random_steer, _separation, _alignment and _cohesion in update()
-    def update(self, boids: List['Boid'], dt: int) -> None:
+    def update(self, boids: List["Boid"], dt: int) -> None:
         # dt is in milliseconds, convert to seconds for physics calculations, when applying steering forces
         # and the speed which are in pixels per second
         dt_seconds: float = dt / 1000.0
 
         # TODO: Use _random_steer, _separation, _alignment and _cohesion in update()
-        # Explanation: 
+        # Explanation:
         # Use the _separation, _alignment, and _cohesion methods to calculate the steering forces based on nearby boids.
-        # Use the flags in the Config class to determine which behaviors are active 
-        # and apply the corresponding steering forces to the boid's velocity 
+        # Use the flags in the Config class to determine which behaviors are active
+        # and apply the corresponding steering forces to the boid's velocity
         # using the defined strengths (*_STEER_STRENGTH) for each behavior.
 
         self._random_steer()
@@ -162,6 +173,11 @@ class Boid:
             self.vx += align_steer.x * config.ALIGNEMENT_STEER_STRENGTH
             self.vy += align_steer.y * config.ALIGNEMENT_STEER_STRENGTH
 
+        if config.COHESION_ON:
+            coh_steer = self._cohesion(boids)
+            self.vx += coh_steer.x * config.COHESION_STEER_STRENGTH
+            self.vy += coh_steer.y * config.COHESION_STEER_STRENGTH
+
         # Update the boid's position based on its velocity.
         self.x += self.vx * dt_seconds
         self.y += self.vy * dt_seconds
@@ -169,45 +185,62 @@ class Boid:
         # Last, handle wall behavior (bounce or wrap)
         if config.WALL_BEHAVIOR == "bounce":
             self._screen_bounce()
-        else:   
+        else:
             self._screen_wrap()
-
 
     # Draw boid as a triangle pointing in the direction of velocity
     def draw(self, screen: pygame.Surface) -> None:
-        arrow_spread_angle: float = 2.5  # Radians between the two back points of the triangle
+        arrow_spread_angle: float = 2.5
         angle: float = math.atan2(self.vy, self.vx)
         points: List[Tuple[float, float]] = [
-            (self.x + math.cos(angle) * config.BOID_SIZE, self.y + math.sin(angle) * config.BOID_SIZE),
-            (self.x + math.cos(angle + arrow_spread_angle) * config.BOID_SIZE, self.y + math.sin(angle + arrow_spread_angle) * config.BOID_SIZE),
-            (self.x + math.cos(angle - arrow_spread_angle) * config.BOID_SIZE, self.y + math.sin(angle - arrow_spread_angle) * config.BOID_SIZE),
+            (
+                self.x + math.cos(angle) * config.BOID_SIZE,
+                self.y + math.sin(angle) * config.BOID_SIZE,
+            ),
+            (
+                self.x + math.cos(angle + arrow_spread_angle) * config.BOID_SIZE,
+                self.y + math.sin(angle + arrow_spread_angle) * config.BOID_SIZE,
+            ),
+            (
+                self.x + math.cos(angle - arrow_spread_angle) * config.BOID_SIZE,
+                self.y + math.sin(angle - arrow_spread_angle) * config.BOID_SIZE,
+            ),
         ]
         pygame.draw.polygon(screen, (255, 255, 255), points)
 
+
 # Draw HUD (Heads Up Display) with FPS and behavior statuses
-def draw_hud(screen: pygame.Surface, font: pygame.font.Font, config: Config, fps: float) -> None:
+def draw_hud(
+    screen: pygame.Surface, font: pygame.font.Font, config: Config, fps: float
+) -> None:
     # Draw separation status and alignment and FPS on the screen
     text: str = f"FPS: {fps:.2f}   (Press 'ESC' or 'Q' to quit)"
     img: pygame.Surface = font.render(text, True, (255, 255, 255))
     screen.blit(img, (10, 10))
-    text: str = f"Separation: {'ON' if config.SEPARATION_ON else 'OFF'} - Press 'S' to toggle"
+    text: str = (
+        f"Separation: {'ON' if config.SEPARATION_ON else 'OFF'} - Press 'S' to toggle"
+    )
     img = font.render(text, True, (255, 255, 255))
     screen.blit(img, (10, 25))
-    text: str = f"Alignment: {'ON' if config.ALIGNEMENT_ON else 'OFF'} - Press 'A' to toggle"
+    text: str = (
+        f"Alignment: {'ON' if config.ALIGNEMENT_ON else 'OFF'} - Press 'A' to toggle"
+    )
     img = font.render(text, True, (255, 255, 255))
     screen.blit(img, (10, 40))
-    text: str = f"Cohesion: {'ON' if config.COHESION_ON else 'OFF'} - Press 'C' to toggle"
+    text: str = (
+        f"Cohesion: {'ON' if config.COHESION_ON else 'OFF'} - Press 'C' to toggle"
+    )
     img = font.render(text, True, (255, 255, 255))
     screen.blit(img, (10, 55))
-    text: str = f"Wall Behavior: {config.WALL_BEHAVIOR.capitalize()} - Press 'W' to toggle"
+    text: str = (
+        f"Wall Behavior: {config.WALL_BEHAVIOR.capitalize()} - Press 'W' to toggle"
+    )
     img = font.render(text, True, (255, 255, 255))
     screen.blit(img, (10, 70))
 
 
 # Main function to run the simulation
 def run_simulation() -> None:
-
-    # Initialize Pygame and create screen, clock, and font
     pygame.init()
     screen: pygame.Surface = pygame.display.set_mode((Config.WIDTH, Config.HEIGHT))
     clock: pygame.time.Clock = pygame.time.Clock()
@@ -215,12 +248,12 @@ def run_simulation() -> None:
 
     # Create boids
     boids: List[Boid] = [Boid() for _ in range(Config.NUM_BOIDS)]
-    
+
     # Main loop
     running: bool = True
     while running:
         dt: int = clock.tick(60)  # Elapsed time in milliseconds since last frame
-        fps: float = clock.get_fps() # Current frames per second
+        fps: float = clock.get_fps()  # Current frames per second
 
         # Screen clearing
         screen.fill((0, 0, 0))
@@ -239,19 +272,21 @@ def run_simulation() -> None:
                 if event.key == pygame.K_c:
                     config.COHESION_ON = not config.COHESION_ON
                 if event.key == pygame.K_w:
-                    config.WALL_BEHAVIOR = "bounce" if config.WALL_BEHAVIOR == "wrap" else "wrap"
+                    config.WALL_BEHAVIOR = (
+                        "bounce" if config.WALL_BEHAVIOR == "wrap" else "wrap"
+                    )
 
         # Update and draw boids in one loop
         for boid in boids:
             boid.update(boids, dt)
             boid.draw(screen)
 
-        # Draw HUD (Heads Up Display) with FPS and behavior statuses
+        # Draw HUD with FPS and behavior statuses
         draw_hud(screen, font, config, fps)
         pygame.display.flip()
 
     pygame.quit()
 
-# Main entry point to run the simulation
+
 if __name__ == "__main__":
     run_simulation()
