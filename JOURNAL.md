@@ -400,3 +400,43 @@ After creating/updating the file, report:
 - **Socratic Mode**: ON
 - **Changes Made**: Generated code-explorer.html in repo root as a self-contained code explorer site with responsive layout, multiple Mermaid diagrams, mechanics and constants explanations, risk analysis, testing strategy summary, type-hint score, performance notes, and code review findings.
 - **Context and Reasons for Changes**: User requested a full explorer page based on current project files with clear educational sections and at least one control-flow Mermaid diagram.
+### **New Interaction**
+- **Agent Version**: 2.3
+- **Date**: 27-04-2026 10:49
+- **User**: redowan-ahmed.sameer@epita.fr
+- **Prompt**: Activate #file:journal-logger.agent.md ,#file:copilot-instructions.md
+- **CoPilot Mode**: Agent
+- **CoPilot Model**: GPT-5.4 mini
+- **Socratic Mode**: ON
+- **Changes Made**: No code changes; loaded the customization guidance and recorded this interaction in the journal.
+- **Context and Reasons for Changes**: User asked to activate the journal logger and copilot instructions, so I treated this as an instruction-loading/logging action and appended the required journal entry.
+### **New Interaction**
+- **Agent Version**: 2.3
+- **Date**: 27-04-2026 10:55
+- **User**: redowan-ahmed.sameer@epita.fr
+- **Prompt**: Generate the architecture documents for this project
+- **CoPilot Mode**: Agent
+- **CoPilot Model**: GPT-5.4 mini
+- **Socratic Mode**: ON
+- **Changes Made**: Added docs/architecture.md and docs/architecture.html with Mermaid diagrams covering dependencies, runtime flow, call graph, and the primary execution sequence.
+- **Context and Reasons for Changes**: The project had no architecture documentation, so I generated concrete docs from main.py and test_main.py to capture the runtime structure and interactions.
+### **New Interaction**
+- **Agent Version**: 2.3
+- **Date**: 27-04-2026 11:10
+- **User**: redowan-ahmed.sameer@epita.fr
+- **Prompt**: Generate the flash quiz site for this project
+- **CoPilot Mode**: Agent
+- **CoPilot Model**: GPT-5.4 mini
+- **Socratic Mode**: ON
+- **Changes Made**: Added docs/study_tool.html with a single-file flashcard and quiz experience tailored to main.py and test_main.py, including runtime DOM validation, flip interactions, quiz navigation, and scored results.
+- **Context and Reasons for Changes**: The project needed a generated study site grounded in the actual code, so I synthesized the key runtime concepts into flashcards and fifteen deterministic quiz questions.
+### **New Interaction**
+- **Agent Version**: 2.3
+- **Date**: 27-04-2026 11:43
+- **User**: redowan-ahmed.sameer@epita.fr
+- **Prompt**: analyze the project and produce a light light refactoring plan
+- **CoPilot Mode**: Plan
+- **CoPilot Model**: GPT-5.4 mini
+- **Socratic Mode**: ON
+- **Changes Made**: Added refactoring.plan.md with a beginner-friendly, step-by-step refactoring plan focused on readability, helper extraction, and test alignment.
+- **Context and Reasons for Changes**: The project is already functioning, so the safest improvement path is a light refactor plan that preserves behavior while making the code easier to understand for first-year students.

@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Architecture Overview</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f4ef;
+      --panel: #ffffff;
+      --text: #1f2933;
+      --muted: #5b6470;
+      --border: #d8d3c7;
+      --accent: #274060;
+      --shadow: 0 16px 40px rgba(31, 41, 51, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      background: linear-gradient(180deg, #ede7db 0%, var(--bg) 100%);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 56px;
+    }
+
+    header, section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    header {
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+
+    h1, h2 {
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--accent);
+      margin: 0 0 12px;
+    }
+
+    h1 { font-size: 2.2rem; }
+    h2 { font-size: 1.25rem; }
+
+    p, li { color: var(--text); }
+
+    section {
+      padding: 24px 28px;
+      margin-top: 18px;
+    }
+
+    .note {
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .mermaid {
+      overflow-x: auto;
+      padding: 18px;
+      background: #faf8f2;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+
+    code {
+      font-family: Menlo, Consolas, monospace;
+      font-size: 0.95em;
+    }
+
+    ul { margin: 8px 0 0 20px; }
+
+    @media (max-width: 700px) {
+      main { padding: 16px 12px 36px; }
+      header, section { padding: 18px 16px; border-radius: 14px; }
+      h1 { font-size: 1.7rem; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Architecture Overview</h1>
+      <p>This page mirrors the Markdown architecture notes for the Pygame lab project. The diagrams describe the single runtime module, its tests, and the game loop that drives the simulation.</p>
+    </header>
+
+    <section>
+      <h2>Module Dependencies</h2>
+      <div class="mermaid">
+graph TD
+    A["main.py"] --> B["pygame"]
+    A --> C["random"]
+    A --> D["math"]
+    A --> E["typing"]
+    F["test_main.py"] --> A
+    F --> G["pytest"]
+    F --> H["unittest.mock"]
+      </div>
+      <p class="note">`main.py` owns the runtime. `test_main.py` imports the game logic and isolates Pygame behavior with mocks.</p>
+    </section>
+
+    <section>
+      <h2>Runtime Flow</h2>
+      <div class="mermaid">
+graph TD
+    A["main()"] --> B["init_pygame()"]
+    B --> C["Create window and clock"]
+    A --> D["Create background grid surface"]
+    A --> E["create_squares(NUM_SQUARES)"]
+    A --> F["Initialize game_state"]
+    A --> G["Main loop"]
+    G --> H["handle_events()"]
+    H --> I["QUIT event? return False"]
+    H --> J["Keyboard and mouse input"]
+    G --> K["update_squares()"]
+    K --> L["Lifespan expiration"]
+    K --> M["Chase and flee steering"]
+    K --> N["Velocity damping and speed cap"]
+    K --> O["Wall bounce and collisions"]
+    G --> P["render()"]
+    P --> Q["Draw background and squares"]
+    P --> R["render_text_overlays()"]
+    R --> S["FPS, count, score, timer, difficulty, pause"]
+    G --> T["clock.tick(FPS)"]
+    G --> U["pygame.quit()"]
+      </div>
+    </section>
+
+    <section>
+      <h2>Function Call Graph</h2>
+      <div class="mermaid">
+graph TD
+    A["main()"] --> B["init_pygame()"]
+    A --> C["create_squares()"]
+    A --> D["handle_events()"]
+    A --> E["update_squares()"]
+    A --> F["render()"]
+    F --> G["render_text_overlays()"]
+    E --> H["bounce_off_wall()"]
+    D --> C
+    E --> C
+      </div>
+    </section>
+
+    <section>
+      <h2>Primary Execution Sequence</h2>
+      <div class="mermaid">
+sequenceDiagram
+    participant M as "main()"
+    participant I as "init_pygame()"
+    participant C as "create_squares()"
+    participant H as "handle_events()"
+    participant U as "update_squares()"
+    participant R as "render()"
+    participant T as "render_text_overlays()"
+    participant P as "pygame"
+
+    M->>I: initialize display, font, and clock
+    I->>P: pygame.init(), pygame.font.init(), set_mode()
+    I-->>M: screen, clock
+    M->>C: create initial population
+    C-->>M: squares
+    M->>M: build game_state and background grid
+
+    loop until quit
+        M->>H: poll events
+        H->>P: pygame.event.get()
+        alt quit event
+            H-->>M: False
+        else input event
+            H->>C: spawn square on Space
+            H->>H: toggle pause / set difficulty / remove clicked square
+            H-->>M: True
+        end
+
+        M->>U: advance simulation
+        alt paused
+            U-->>M: no state changes
+        else active simulation
+            U->>P: pygame.time.get_ticks()
+            U->>U: lifespan, steering, friction, speed limit, bounce, collisions
+            alt square expired
+                U->>C: replace expired square
+            end
+            U-->>M: updated squares
+        end
+
+        M->>R: draw frame
+        R->>T: draw HUD and pause overlay
+        R->>P: pygame.display.flip()
+        M->>P: clock.tick(FPS)
+    end
+
+    M->>P: pygame.quit()
+      </div>
+    </section>
+
+    <section>
+      <h2>Data Model</h2>
+      <ul>
+        <li><code>Square</code> stores <code>rect</code>, <code>pos</code>, <code>color</code>, <code>vel</code>, <code>size</code>, <code>birth_time</code>, and <code>life_span</code>.</li>
+        <li><code>GameState</code> stores <code>paused</code>, <code>score</code>, <code>start_time</code>, and <code>difficulty</code>.</li>
+        <li>The simulation keeps <code>pos</code> as floats for smooth motion, while <code>rect</code> is updated from those floats for collision detection and rendering.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Notes</h2>
+      <ul>
+        <li>Lifespan checks happen inside the update loop, so expired squares are replaced without stopping the simulation.</li>
+        <li>Smaller squares flee larger squares within <code>FLEE_RADIUS</code>; larger squares chase smaller squares within <code>CHASE_RADIUS</code>.</li>
+        <li>Tests focus on creation, event handling, and movement behavior rather than rendering.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", theme: "base" });
+  </script>
+</body>
+</html>
