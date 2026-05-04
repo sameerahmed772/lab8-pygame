@@ -38,6 +38,7 @@ PAUSE_COLOR = (255, 50, 50)
 DIFFICULTY_MODS = {pygame.K_1: 1.0, pygame.K_2: 1.5, pygame.K_3: 2.0}
 SCORE_VAL = 100
 TRAILS_LENGTH = 10
+TEST_MODE_ON = True  # Exercise 8:Speed test
 
 # ============================================================================
 # DATA MODELS
@@ -288,12 +289,25 @@ def main():
         pygame.draw.line(bg, BG_GRID, (0, y), (WIDTH, y))
 
     squares: List[Square] = []
-    for _ in range(5):
-        squares.append(create_single_square(25))
-    for _ in range(10):
-        squares.append(create_single_square(10))
-    for _ in range(30):
-        squares.append(create_single_square(4))
+    if TEST_MODE_ON:
+        test_sq = create_single_square(25)
+        
+        test_sq["pos"] = [float(WIDTH / 2), float(HEIGHT / 2)]
+        test_sq["rect"].center = (WIDTH // 2, HEIGHT // 2)
+        
+        max_speed = (BASE_SPEED_FACTOR / 25) * 1.0 
+        test_sq["vel"] = [max_speed, 0.0]
+        
+        squares.append(test_sq)
+        last_test_time = pygame.time.get_ticks()
+        last_test_pos = list(test_sq["pos"])
+    else:
+        for _ in range(5):
+            squares.append(create_single_square(25))
+        for _ in range(10):
+            squares.append(create_single_square(10))
+        for _ in range(30):
+            squares.append(create_single_square(4))
 
     state: GameState = {
         "paused": False,
@@ -325,6 +339,19 @@ def main():
 
         # Logic & Rendering
         update_simulation(squares, state)
+
+        # Exercise 8: Check distance travelled
+        if TEST_MODE_ON and not state["paused"] and squares:
+            now = pygame.time.get_ticks()
+            if now - last_test_time >= 1000:
+                current_pos = squares[0]["pos"]
+                dist = math.hypot(current_pos[0] - last_test_pos[0], current_pos[1] - last_test_pos[1])
+                # Calculate theoretical max distance 
+                max_speed_per_frame = (BASE_SPEED_FACTOR / squares[0]["size"]) * state["difficulty"]
+                max_dist_per_sec = max_speed_per_frame * FPS
+                print(f"[Speed Test] Real Distance (1s): {dist:.2f}px | Max Expected (1s): {max_dist_per_sec:.2f}px")
+                last_test_time = now
+                last_test_pos = list(current_pos)
 
         screen.blit(bg, (0, 0))
         for s in squares:

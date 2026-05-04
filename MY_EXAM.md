@@ -22,4 +22,13 @@ limit = (BASE_SPEED_FACTOR / sq["size"]) * diff
 Because my BASE_SPEED_FACTOR is 100, if the square size grows to 200, the speed limit becomes very small (100 / 200 = 0.5). Thats why the giant square moves so slow and the pygame UI also glitches into different colors which looks very funny
 
 ##Exercise 7: Trails
-I will update the Square dictionary to add a history list. Every frame, I will add the square's position to this list. If the list is longer than TRAILS_LENGTH = 30, I will delete the oldest position. When I draw the game, I will read this history list and use pygame.draw.line() to connect the points so it looks like a trail
+I added a history list to the Square. Every frame, I save the center position. If the list has more than 30 points, I delete the oldest one. Then I use pygame.draw.line() to connect them
+
+The issue:
+I saw giant lines shooting across the whole screen. This probably happened because of screen wrapping which i added in Exercise 3. When a square teleports from the far right to the far left, the trail tries to connect those two points
+
+How I solved it:
+I added a distance check. Before I draw a line, I check the distance between the two points. If the distance is bigger than half the screen width, I know the square teleported, so I don't draw that line
+
+##Exercise 8: Speed Test
+For the speed test, I am planning to add a TEST_MODE_ON variable that spawns just a single test square on an empty screen to prevent collisions. I will record it's starting position (which will be the center) and after 1 second I will check how much distance it travelled with math function to find the speed. Then I can compare the real distance travelled and if it actually moves at the correct speed
